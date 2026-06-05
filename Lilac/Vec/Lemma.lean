@@ -76,9 +76,7 @@ theorem Vec.list_zipIdx {α n k} {v : Vec α n} : (v.zipIdx k).list = v.list.zip
 @[grind .]
 theorem Vec.list_of_at_least_one_nonempty {α n} {v : Vec α (n + 1)} : v.list ≠ [] := sorry
 
-/-!
-## length
-
+/-! ## length
 Vec carries its own length, hence why length is marked reducible.
 This also means that most operations on length are trivial and the simplifier will reject them.
 -/
@@ -227,13 +225,77 @@ theorem Vec.get_zipIdx {α n k} {v : Vec α n} {i : Fin n} : (v.zipIdx k)[i] = (
 
 -- TODO
 
-/-! ## map -/
+/-! ## map
+Why don't we use `Functor` / `LawfulFunctor`?
+Because Lean's type inference is not capable of figuring out the right functor `f` when
+using `Functor.map`.
+Try it yourself: implement `Functor (Vec · n)` and notice how `(· + 2) <$> #(1, 2)` fails.
+Solutions:
+1. Try to fix Lean's type inference algorithm, unclear if Lean developers will be receptive
+2. Use `Vec.map` directly (not horrible, `v.map f` is good ergonomics)
+3. Define our own `IndexedFunctor` type that will resolve the index correctly:
+```lean
+class IndexedFunctor (I : Type u) (F : Type v -> I -> Type w) where
+  imap {α β i} (f : α -> β) : F α i -> F β i
 
--- TODO
+instance : IndexedFunctor Nat Vec where
+  imap := Vec.map
+
+#eval IndexedFunctor.imap (· + 2) #(1, 2)
+```
+**For now we choose 2**
+-/
+
+@[simp, grind =]
+theorem Vec.map_id {v : Vec α n} : v.map id = v := sorry
+
+@[simp, grind =]
+theorem Vec.map_id_lambda {v : Vec α n} : v.map (λ x => x) = v := sorry
+
+@[simp, grind =]
+theorem Vec.map_tail {α β n} {f : α -> β} [NeZero n] {v : Vec α n} : v.tail.map f = (v.map f).tail := sorry
+
+@[simp, grind =]
+theorem Vec.map_set {α β n i x} {f : α -> β} {v : Vec α n} : (v.set i x).map f = (v.map f).set i (f x) := sorry
+
+@[simp, grind =]
+theorem Vec.map_concat {α β n x} {f : α -> β} {v : Vec α n} : (v.concat x).map f = (v.map f).concat (f x) := sorry
+
+@[simp, grind =]
+theorem Vec.map_append {α β n m} {f : α -> β} {v1 : Vec α n} {v2 : Vec α m} : (v1 ++ v2).map f = v1.map f ++ v2.map f := sorry
+
+@[simp, grind =]
+theorem Vec.map_flatten {α β n m} {f : α -> β} {v : Vec (Vec α n) m} : v.flatten.map f = (v.map (map f)).flatten := sorry
+
+@[simp, grind =]
+theorem Vec.map_map {α β γ n} {f : α -> β} {h : β -> γ} {v : Vec α n} : (v.map f).map h = v.map (h ∘ f) := sorry
+
+@[simp, grind =]
+theorem Vec.map_replicate {α β n} {a : α} {f : α -> β} : (replicate n a).map f = replicate n (f a) := sorry
+
+@[simp, grind =]
+theorem Vec.map_reverse {α β n} {f : α -> β} {v : Vec α n} : v.reverse.map f = (v.map f).reverse := sorry
+
+@[simp, grind =]
+theorem Vec.map_take {α β m n} {f : α -> β} {h} {v : Vec α m} : (v.take n h).map f = (v.map f).take n h := sorry
+
+@[simp, grind =]
+theorem Vec.map_drop {α β m n} {f : α -> β} {h} {v : Vec α m} : (v.drop n h).map f = (v.map f).drop n h := sorry
 
 /-! ## beq -/
 
--- TODO
+instance {α n} [BEq α] [ReflBEq α] : ReflBEq (Vec α n) where
+  rfl := sorry
+
+instance {α n} [BEq α] [LawfulBEq α] : LawfulBEq (Vec α n) where
+  eq_of_beq := sorry
+
+@[grind =]
+theorem Vec.beq_head_tail {α n} [BEq α] [NeZero n] {v1 : Vec α n} {v2 : Vec α n} : v1.head == v2.head ∧ v1.tail == v2.tail <-> v1 == v2 := sorry
+
+-- TODO: there is some funext automation thing that should be used here
+@[grind <-]
+theorem Vec.beq_get {α n} [BEq α] {v1 : Vec α n} {v2 : Vec α n} (h : ∀ (i : Fin n), v1[i] == v2[i]) : v1 == v2 := sorry
 
 /-! ## replicate -/
 
@@ -280,6 +342,34 @@ theorem Vec.get_zipIdx {α n k} {v : Vec α n} {i : Fin n} : (v.zipIdx k)[i] = (
 -- TODO
 
 /-! ## zipIdx -/
+
+-- TODO
+
+/-! ## find? -/
+
+-- TODO
+
+/-! ## findIdx? -/
+
+-- TODO
+
+/-! ## erase -/
+
+-- TODO
+
+/-! ## count -/
+
+-- TODO
+
+/-! ## traverse -/
+
+-- TODO
+
+/-! ## sequence -/
+
+-- TODO
+
+/-! ## sum -/
 
 -- TODO
 

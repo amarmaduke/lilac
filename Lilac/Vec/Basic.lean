@@ -101,12 +101,12 @@ def Vec.set {α n} : Vec α n -> Fin n -> α -> Vec α n
 | x::xs, i, a => Fin.cases (a::xs) (λ i => x::(xs.set i a)) i
 
 @[simp]
-def Vec.foldl {α β n} (f : α -> β -> α) (init : α) : Vec β n -> α
+def Vec.foldl {α : Type u} {β : Type v} {n} (f : α -> β -> α) (init : α) : Vec β n -> α
 | #() => init
 | x::xs => foldl f (f init x) xs
 
 @[simp]
-def Vec.foldr {α β n} (f : α -> β -> β) (init : β) : Vec α n -> β
+def Vec.foldr {α : Type u} {β : Type v} {n} (f : α -> β -> β) (init : β) : Vec α n -> β
 | #() => init
 | x::xs => f x (foldr f init xs)
 
@@ -128,11 +128,11 @@ def Vec.flatten {α n m} : Vec (Vec α n) m -> Vec α (n * m)
 | x::xs => x.append xs.flatten |> cast (by grind)
 
 @[simp]
-def Vec.map {α β n} (f : α -> β) : Vec α n -> Vec β n
+def Vec.map {α : Type u} {β : Type b} {n} (f : α -> β) : Vec α n -> Vec β n
 | #() => #()
 | x::xs => (f x)::(xs.map f)
 
-instance {n} : Functor (Vec · n) where
+instance {n} : Functor (λ α => Vec α n) where
   map := Vec.map
 
 @[simp]
@@ -165,12 +165,12 @@ def Vec.contains {α n} [BEq α] (a : α) : Vec α n -> Bool
 | #() => false
 | x::xs => x == a || contains a xs
 
-def Vec.take {m α} : (n : Nat) -> (h : n ≤ m) -> Vec α m -> Vec α n
+def Vec.take {α m} : (n : Nat) -> (h : n ≤ m) -> Vec α m -> Vec α n
 | _, h, #() => (#() : Vec α 0) |> cast (by cases h; simp)
 | 0, h, v => #()
 | n + 1, h, x::xs => x::xs.take n (by grind)
 
-def Vec.drop {m α} : (n : Nat) -> (h : n ≤ m) -> Vec α m -> Vec α (m - n)
+def Vec.drop {α m} : (n : Nat) -> (h : n ≤ m) -> Vec α m -> Vec α (m - n)
 | _, h, #() => (#() : Vec α 0) |> cast (by cases h; simp)
 | 0, h, v => v
 | n + 1, h, x::xs => xs.drop n (by grind) |> cast (by grind)
@@ -184,13 +184,15 @@ def Vec.all {α n} : Vec α n -> (p : α -> Bool) -> Bool
 | x::xs, p => p x && xs.any p
 
 @[simp]
-def Vec.zipWith {α β γ n} (f : α -> β -> γ) : Vec α n -> Vec β n -> Vec γ n
+def Vec.zipWith {α : Type u} {β : Type v} {γ : Type w} {n} (f : α -> β -> γ)
+  : Vec α n -> Vec β n -> Vec γ n
 | #(), #() => #()
 | x::xs, y::ys => f x y::zipWith f xs ys
 
-def Vec.zip {α β n} (v1 : Vec α n) (v2 : Vec β n) : Vec (α × β) n := zipWith (· , ·) v1 v2
+def Vec.zip {α : Type u} {β : Type v} {n} (v1 : Vec α n) (v2 : Vec β n) : Vec (α × β) n :=
+  zipWith (· , ·) v1 v2
 
-def Vec.unzip {α β n} : Vec (α × β) n -> (Vec α n) × (Vec β n)
+def Vec.unzip {α : Type u} {β : Type v} {n} : Vec (α × β) n -> (Vec α n) × (Vec β n)
 | #() => (#(), #())
 | (a, b)::xs =>
   let (as, bs) := xs.unzip
@@ -205,6 +207,45 @@ def Vec.range : (n : Nat) -> (k : Nat := 0) -> Vec Nat n
 def Vec.zipIdx {α n} : Vec α n -> (k : Nat := 0) -> Vec (α × Nat) n
 | #(), _ => #()
 | x::xs, k => (x, k)::xs.zipIdx (k + 1)
+
+@[simp]
+def Vec.find? {α n} (p : α -> Bool) : Vec α n -> Option α
+| #() => none
+| x::xs => if p x then x else xs.find? p
+
+def Vec.findIdx? {α n} (p : α -> Bool) : Vec α n -> Option (Fin n)
+| #() => none
+| x::xs => go (x::xs) 0
+where
+  go : {n : Nat} -> Vec α n -> Nat -> Option (Fin n)
+  | _, #(), _ => none
+  | n + 1, x::xs, i => if p x then Fin.ofNat (n + 1) i else Fin.castSucc <$> go xs (i + 1)
+
+def Vec.erase {α} [BEq α] : {n : Nat} -> Vec α n -> α -> (m : Nat) × Vec α m ×' (n ≤ m + 1)
+| 0, #(), _ => ⟨0, #(), by grind⟩
+| n + 1, x::xs, a =>
+  match x == a with
+  | true => ⟨n, xs, by grind⟩
+  | false =>
+    let ⟨m, xs', h⟩ := erase xs a
+    ⟨m + 1, x::xs', by grind⟩
+
+@[simp]
+def Vec.count {α n} [BEq α] (a : α) : Vec α n -> Nat
+| #() => 0
+| x::xs => xs.count a + (if x == a then 1 else 0)
+
+@[simp]
+def Vec.traverse {m α β n} [Applicative m] (f : α -> m β) : Vec α n -> m (Vec β n)
+| #() => pure #()
+| x::xs => cons <$> f x <*> traverse f xs
+
+def Vec.sequence {m α n} [Applicative m] : Vec (m α) n -> m (Vec α n) := traverse id
+
+@[simp]
+def Vec.sum {n} : Vec Nat n -> Nat
+| #() => 0
+| x::xs => xs.sum + x
 
 inductive Vec.Mem {α} (x : α) : {n : Nat} -> Vec α n -> Prop where
 | head {xs} : Mem x (x::xs)
