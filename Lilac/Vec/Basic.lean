@@ -115,11 +115,15 @@ def Vec.concat {α n} : Vec α n -> α -> Vec α (n + 1)
 | #(), a => a::#()
 | x::xs, a => x::(concat xs a)
 
-def Vec.append {α n m} : Vec α n -> Vec α m -> Vec α (n + m)
-| #(), ys => ys |> cast (by simp)
-| x::xs, ys => x::(xs.append ys) |> cast (by grind)
+/--
+We intentionally flip the addition order to avoid `cast`ing and obtain better simplification
+-/
+@[simp]
+def Vec.append {α n m} : Vec α n -> Vec α m -> Vec α (m + n)
+| #(), ys => ys
+| x::xs, ys => x::(xs.append ys)
 
-instance {α : Type u} {n m : Nat} : HAppend (Vec α n) (Vec α m) (Vec α (n + m)) where
+instance {α : Type u} {n m : Nat} : HAppend (Vec α n) (Vec α m) (Vec α (m + n)) where
   hAppend := Vec.append
 
 @[simp]

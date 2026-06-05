@@ -174,9 +174,9 @@ theorem Vec.get_set_eq {α n i x} {v : Vec α n} : (v.set i x)[i] = x := sorry
 theorem Vec.get_concat {α n x} {v : Vec α n} {i : Fin (n + 1)} (h : i ≠ 0) : (v.concat x)[i] = v[Fin.pred i h] := sorry
 
 @[grind =]
-theorem Vec.get_append_lt {α n m} {v1 : Vec α n} {v2 : Vec α m} {i : Fin (n + m)} (h : i < n) : (v1 ++ v2)[i] = v1[i.castLT h] := sorry
+theorem Vec.get_append_lt {α n m} {v1 : Vec α n} {v2 : Vec α m} {i : Fin (m + n)} (h : i < n) : (v1 ++ v2)[i] = v1[i.castLT h] := sorry
 
-theorem Vec.get_append_ge {α n m} {v1 : Vec α n} {v2 : Vec α m} {i : Fin (n + m)} (h : i ≥ n)
+theorem Vec.get_append_ge {α n m} {v1 : Vec α n} {v2 : Vec α m} {i : Fin (m + n)} (h : i ≥ n)
   : (v1 ++ v2)[i] = v2[Fin.subNat n (i.cast (by grind) : Fin (m + n)) h]
 := sorry
 
@@ -219,7 +219,13 @@ theorem Vec.get_zipIdx {α n k} {v : Vec α n} {i : Fin n} : (v.zipIdx k)[i] = (
 
 /-! ## append -/
 
--- TODO
+@[grind =]
+theorem Vec.append_nil_right {α n} {v : Vec α n} : v ++ (#() : Vec α 0) = (v |> cast (by simp)) := sorry
+
+@[grind =]
+theorem Vec.append_assoc {α n1 n2 n3} {v1 : Vec α n1} {v2 : Vec α n2} {v3 : Vec α n3}
+  : (v1 ++ v2) ++ v3 = (v1 ++ (v2 ++ v3) |> cast (by congr 1; grind))
+:= sorry
 
 /-! ## flatten -/
 
