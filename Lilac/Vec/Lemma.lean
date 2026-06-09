@@ -11,10 +11,13 @@ namespace Lilac
 /-! ## Fun.Vec.to -/
 
 @[simp]
-theorem Fun.Vec.to_nil {α} : to (nil : Vec α 0) = .nil := by rfl
+theorem Fun.Vec.to_nil {α} : to (nil : Vec α 0) = .nil := rfl
 
 @[simp]
-theorem Fun.Vec.to_cons {α n hd} {tl : Vec α n} : to (cons hd tl) = .cons hd tl.to := by rfl
+theorem Vec.to_nil {α} : (Vec.to (#() : Vec α 0)) = (.nil : Fun.Vec α 0) := rfl
+
+@[simp]
+theorem Fun.Vec.to_cons {α n hd} {tl : Vec α n} : to (cons hd tl) = .cons hd tl.to := rfl
 
 @[simp]
 theorem Fun.Vec.to_iso {α n} {v : Fun.Vec α n} : v.to.to = v := by
@@ -32,22 +35,59 @@ theorem Vec.to_iso {α n} : {v : Vec α n} -> v.to.to = v
 /-! ## list -/
 
 @[simp]
-theorem Vec.list_tail {α n} [NeZero n] {v : Vec α n} : v.tail.list = v.list.tail := sorry
+theorem Vec.list_tail {n α} : [NeZero n] → {v : Vec α n} → v.tail.list = v.list.tail
+| nz, #() => False.elim (nz.out rfl)
+| nz, x::xs => by simp
 
 @[simp]
-theorem Vec.list_set {α n i x} {v : Vec α n} : (v.set i x).list = v.list.set i x := sorry
+theorem Vec.list_set {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (v.set i a).list = v.list.set i a
+| 0, i, #() => by grind
+| n + 1, i, (x::xs) =>
+  @Fin.cases
+    n
+    (fun i ↦ ((x::xs).set i a).list = (x::xs).list.set i a) -- Motive
+    (by simp [Vec.set])                                     -- 0 case
+    (fun i' ↦ by simp [Vec.set, list_set])                  -- succ case
+    i
 
 @[simp]
-theorem Vec.list_concat {α n x} {v : Vec α n} : (v.concat x).list = v.list.concat x := sorry
+theorem Vec.list_concat {α n x} : {v : Vec α n} → (v.concat x).list = v.list.concat x
+| #() => rfl
+| x::xs => by simp [list_concat]
+
+-- Avoids needing to unfold HAppend.hAppend. Maybe there's a better way.
+@[simp]
+theorem Vec.nil_append {α n} : {v : Vec α n} → (#() : Vec α 0) ++ v = v := rfl
+
+-- Avoids needing to unfold HAppend.hAppend. Maybe there's a better way.
+@[simp]
+theorem Vec.cons_append {α n m} {x : α} {xs : Vec α m} {v : Vec α n} : (x :: xs) ++ v = x :: (xs ++ v) := rfl
 
 @[simp]
-theorem Vec.list_append {α n m} {v1 : Vec α n} (v2 : Vec α m) : (v1 ++ v2).list = v1.list ++ v2.list := sorry
+theorem Vec.append_nil {α n} : (v : Vec α n) → (v ++ (#() : Vec α 0)) = (cast (by simp) v)
+| #() => by simp
+| x::xs => by simp [append_nil xs] ; grind
+
+-- Changed v2 to be implicit
+@[simp]
+theorem Vec.list_append {α n m} : {v1 : Vec α n} → {v2 : Vec α m} → (v1 ++ v2).list = v1.list ++ v2.list
+| #(), v => by simp
+| v, #() => by simp ; grind
+| x::xs, v => by simp [list_append]
 
 @[simp]
-theorem Vec.list_flatten {α n m} {v : Vec (Vec α n) m} : v.flatten.list = (list <$> v.list).flatten := sorry
+theorem Vec.list_flatten {α n m} : {v : Vec (Vec α n) m} → v.flatten.list = (list <$> v.list).flatten
+| #() => rfl
+| x::xs => by
+  simp [Vec.flatten, Vec.list, Functor.map]
+  conv => lhs ; apply list_append
+  congr
+  exact list_flatten
 
 @[simp]
-theorem Vec.list_map {α β n} {f : α -> β} {v : Vec α n} : (v.map f).list = v.list.map f := sorry
+theorem Vec.list_map {α β n} {f : α -> β} : {v : Vec α n} → (v.map f).list = v.list.map f
+| #() => by simp
+| x::xs => by simp [map, list_map]
 
 @[simp]
 theorem Vec.list_replicate {α n} {x : Nat} {v : Vec α n} : (replicate n x).list = List.replicate n x := sorry
@@ -74,13 +114,16 @@ theorem Vec.list_zipWith {α β γ n} {f : α -> β -> γ} {v1 : Vec α n} {v2 :
 theorem Vec.list_zip {α β n} {v1 : Vec α n} {v2 : Vec β n} : (zip v1 v2).list = List.zip v1.list v2.list := sorry
 
 @[simp]
-theorem Vec.list_range {n k} : (range n k).list = List.range' 0 n k := sorry
-
-@[simp]
 theorem Vec.list_zipIdx {α n k} {v : Vec α n} : (v.zipIdx k).list = v.list.zipIdx k := sorry
 
+@[simp]
+theorem Vec.list_range {k} : (n : Nat) → (range n k).list = List.range' k n 1
+| 0 => by simp
+| n + 1 => by simp [range, list_range, List.range']
+
 @[grind .]
-theorem Vec.list_of_at_least_one_nonempty {α n} {v : Vec α (n + 1)} : v.list ≠ [] := sorry
+theorem Vec.list_of_at_least_one_nonempty {α n} : {v : Vec α (n + 1)} → v.list ≠ []
+| x::xs => by simp
 
 /-! ## length
 Vec carries its own length, hence why length is marked reducible.
@@ -97,8 +140,9 @@ theorem Vec.length_set {α n i x} {v : Vec α n} : (v.set i x).length = n := rfl
 @[simp]
 theorem Vec.length_concat {α n x} {v : Vec α n} : (v.concat x).length = n + 1 := rfl
 
+-- Still want Agda style if this can be done in one grind call?
 @[simp]
-theorem Vec.length_append {α n m} {v1 : Vec α n} {v2 : Vec α m} : (v1 ++ v2).length = n + m := sorry
+theorem Vec.length_append {α n m} {v1 : Vec α n} {v2 : Vec α m} : (v1 ++ v2).length = n + m := by grind
 
 @[simp]
 theorem Vec.length_flatten {α n m} {v : Vec (Vec α n) m} : v.flatten.length = n * m := rfl
