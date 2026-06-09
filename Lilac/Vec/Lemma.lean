@@ -14,9 +14,6 @@ namespace Lilac
 theorem Fun.Vec.to_nil {α} : to (nil : Vec α 0) = .nil := by rfl
 
 @[simp]
-theorem Fun.Vec.to_nil' {α} : (#().to) = (nil : Vec α 0) := by rfl
-
-@[simp]
 theorem Fun.Vec.to_cons {α n hd} {tl : Vec α n} : to (cons hd tl) = .cons hd tl.to := by rfl
 
 @[simp]
@@ -27,11 +24,10 @@ theorem Fun.Vec.to_iso {α n} {v : Fun.Vec α n} : v.to.to = v := by
 
 /-! ## to -/
 
+@[simp]
 theorem Vec.to_iso {α n} : {v : Vec α n} -> v.to.to = v
-| #() => by rw [Fun.Vec.to_nil', Fun.Vec.to_nil]
-| x::xs => by
-  simp
-  exact @Vec.to_iso _ _ xs
+| #() => by simp
+| x::xs => by simp [to_iso]
 
 /-! ## list -/
 
