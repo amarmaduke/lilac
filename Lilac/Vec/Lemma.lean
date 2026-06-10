@@ -114,15 +114,20 @@ theorem Vec.list_drop {α : Type u} : {m n : Nat} -> {v : Vec α m} -> {h : n �
   sorry
 
 @[simp]
-theorem Vec.list_zipWith {α β γ n} {f : α -> β -> γ} {v1 : Vec α n} {v2 : Vec β n}
-  : (zipWith f v1 v2).list = List.zipWith f v1.list v2.list
-:= sorry
+theorem Vec.list_zipWith {α β γ n} {f : α -> β -> γ}
+  : {v1 : Vec α n} → {v2 : Vec β n} → (zipWith f v1 v2).list = List.zipWith f v1.list v2.list
+| #(), #() => rfl
+| x::xs, y::ys => by simp [zipWith, list_zipWith]
 
 @[simp]
-theorem Vec.list_zip {α β n} {v1 : Vec α n} {v2 : Vec β n} : (zip v1 v2).list = List.zip v1.list v2.list := sorry
+theorem Vec.list_zip {α β n} : {v1 : Vec α n} → {v2 : Vec β n} → (zip v1 v2).list = List.zip v1.list v2.list
+| #(), #() => rfl
+| x::xs, y::ys => by simp [zip, ← list_zip]
 
 @[simp]
-theorem Vec.list_zipIdx {α n k} {v : Vec α n} : (v.zipIdx k).list = v.list.zipIdx k := sorry
+theorem Vec.list_zipIdx {α n k} : {v : Vec α n} → (v.zipIdx k).list = v.list.zipIdx k
+| #() => rfl
+| x::xs => by simp [zipIdx, list_zipIdx]
 
 @[simp]
 theorem Vec.list_range {k} : (n : Nat) → (range n k).list = List.range' k n 1
@@ -241,8 +246,21 @@ theorem Vec.get_set_eq {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} →
   case zero => simp [set, getElem, get]
   case succ i' => simp [set, get_set_eq]
 
+theorem succ_castLT {n} {i : Fin (n + 1)} {h : i ≠ n}
+  : (Fin.succ i).castLT ((by grind) : i.succ < n + 1) = Fin.succ (i.castLT ((by grind) : i < n)) := by grind
+
 @[grind =]
-theorem Vec.get_concat {α n x} {v : Vec α n} {i : Fin (n + 1)} (h : i ≠ 0) : (v.concat x)[i] = v[Fin.pred i h] := sorry
+theorem Vec.get_concat {α a}
+  : {n : Nat} → {i : Fin (n + 1)} → (h : i ≠ n) → {v : Vec α n} → (v.concat a)[i] = v[i.castLT ((by grind) : i < n)]
+| 0, _, _, #() => by grind
+| n + 1, i, h, x::xs => by
+  cases i using Fin.cases
+  case zero => simp [Fin.castLT]
+  case succ i' =>
+    simp [@get_concat _ a n i' (by grind) xs]
+    rw [succ_castLT]
+    simp
+    grind
 
 @[grind =]
 theorem Vec.get_append_lt {α n m} {v1 : Vec α n} {v2 : Vec α m} {i : Fin (m + n)} (h : i < n) : (v1 ++ v2)[i] = v1[i.castLT h] := sorry
