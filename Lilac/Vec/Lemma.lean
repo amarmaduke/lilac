@@ -1,7 +1,17 @@
-
 import Lilac.Vec.Basic
 
 namespace Lilac
+
+/-! ## Misc. -/
+
+theorem zero_lt_imp_neZero {n} : [NeZero n] → 0 < n
+| h => by simp [Nat.ne_zero_iff_zero_lt.mp, h.out]
+
+theorem succ_castLT {n} {i : Fin (n + 1)} {_ : i ≠ n}
+  : i.succ.castLT ((by grind) : i.succ < n + 1) = (i.castLT ((by omega) : i < n)).succ := by grind
+
+theorem succ_castLT' {m n : Nat} {i : Fin (n + m)} {h : i < m}
+  : (Fin.succ i).castLT ((by grind) : i.succ < m + 1) = Fin.succ (i.castLT ((by omega) : i < m)) := by grind
 
 /-!
   # Vec Lemmas
@@ -246,8 +256,6 @@ theorem Vec.get_set_eq {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} →
   case zero => simp [set, getElem, get]
   case succ i' => simp [set, get_set_eq]
 
-theorem succ_castLT {n} {i : Fin (n + 1)} {h : i ≠ n}
-  : (Fin.succ i).castLT ((by grind) : i.succ < n + 1) = Fin.succ (i.castLT ((by grind) : i < n)) := by grind
 
 @[grind =]
 theorem Vec.get_concat {α a}
@@ -263,20 +271,65 @@ theorem Vec.get_concat {α a}
     grind
 
 @[grind =]
-theorem Vec.get_append_lt {α n m} {v1 : Vec α n} {v2 : Vec α m} {i : Fin (m + n)} (h : i < n) : (v1 ++ v2)[i] = v1[i.castLT h] := sorry
+theorem Vec.get_concat' {α a n} : {i : Fin n} → {v : Vec α n} → (v.concat a)[i.castSucc] = v[i]
+| i, #() => by grind
+| i , x::xs => by
+  simp
+  cases i using Fin.cases
+  case zero => simp
+  case succ i' => simp [get_concat']
+
+@[grind =]
+theorem Vec.get_append_lt {α}
+  : {n m : Nat} → {v1 : Vec α n} → {v2 : Vec α m} → {i : Fin (m + n)} → (h : i < n) → (v1 ++ v2)[i] = v1[i.castLT h]
+| 0, _, #(), _, i, h => by grind
+| n + 1, m, x::xs, ys, i, h => by
+  cases i using Fin.cases
+  case zero => simp [get, getElem, Fin.castLT]
+  case succ i' => simp [@succ_castLT' n m i' (by grind), @get_append_lt _ _ _ _ _ i' (by grind)]
 
 theorem Vec.get_append_ge {α n m} {v1 : Vec α n} {v2 : Vec α m} {i : Fin (m + n)} (h : i ≥ n)
-  : (v1 ++ v2)[i] = v2[Fin.subNat n (i.cast (by grind) : Fin (m + n)) h]
-:= sorry
+  : (v1 ++ v2)[i] = v2[Fin.subNat n (i.cast (by grind) : Fin (m + n)) h] := sorry
 
 @[simp]
-theorem Vec.get_map {α β n} {f : α -> β} {v : Vec α n} {i : Fin n} : (v.map f)[i] = f v[i] := sorry
+theorem Vec.get_map {α β} {f : α -> β} : {n : Nat} → {v : Vec α n} → {i : Fin n} → (v.map f)[i] = f v[i]
+| n + 1, x::xs, i => by
+  cases i using Fin.cases
+  case zero => simp [getElem, get]
+  case succ i' => simp [@get_map _ _ f n xs i']
 
 @[simp]
-theorem Vec.get_replicate {α n} {x : α} {i : Fin n} : (replicate n x)[i] = x := sorry
+theorem Vec.get_replicate {α} {x : α} : {n : Nat} → {i : Fin n} → (replicate n x)[i] = x
+| n + 1, i => by
+  cases i using Fin.cases
+  case zero => rfl
+  case succ i' => simp [get_replicate]
 
 @[simp]
-theorem Vec.get_reverse {α n} {v : Vec α n} {i : Fin n} : v.reverse[i] = v[i.rev] := sorry
+theorem Vec.cons_get_last {α n x} : {xs : Vec α (n + 1)} → xs[Fin.last n] = (x::xs)[Fin.last (n + 1)]
+| x'::xs => by simp [Fin.last, getElem, get]
+
+@[simp]
+theorem Vec.concat_get_last {α} {n : Nat} {a : α} : {xs : Vec α n} → (xs.concat a)[Fin.last n] = a
+| #() => rfl
+| x::xs => by simp [concat, ← cons_get_last, concat_get_last]
+
+@[simp]
+theorem Vec.cons_get_rev {α} {x : α} : {n : Nat} → {xs : Vec α n} → {i : Fin n} → (x::xs)[i.castSucc.rev] = xs[i.rev]
+| _, #(), i => by grind
+| n + 1, x'::xs, i => by
+  have blah : i.castSucc.rev = i.rev.castSucc + 1 := by
+    simp [Fin.rev]
+    sorry
+  simp [blah]
+
+@[simp]
+theorem Vec.get_reverse {α} : {n : Nat} → {v : Vec α n} → {i : Fin n} → v.reverse[i] = v[i.rev]
+| 1, x::#(), 0 => rfl
+| n + 1 + 1, x::xs, i => by
+  induction i using Fin.reverseInduction
+  case last => simp [reverse]
+  case cast i' ih => simp [get_concat', get_reverse]
 
 @[simp]
 theorem Vec.get_zipWith {α β γ n} {f : α -> β -> γ} {v1 : Vec α n} {v2 : Vec β n} {i : Fin n} : (zipWith f v1 v2)[i] = f v1[i] v2[i] := sorry
