@@ -22,14 +22,14 @@ theorem Fun.Vec.to_cons {α n hd} {tl : Vec α n} : to (cons hd tl) = .cons hd t
 @[simp]
 theorem Fun.Vec.to_iso {α n} {v : Fun.Vec α n} : v.to.to = v := by
   induction v using Fun.Vec.induction
-  case nil => simp
+  case nil => rfl
   case cons ih => simp [ih]
 
 /-! ## to -/
 
 @[simp]
 theorem Vec.to_iso {α n} : {v : Vec α n} -> v.to.to = v
-| #() => by simp
+| #() => rfl
 | x::xs => by simp [to_iso]
 
 /-! ## list -/
@@ -37,7 +37,7 @@ theorem Vec.to_iso {α n} : {v : Vec α n} -> v.to.to = v
 @[simp]
 theorem Vec.list_tail {n α} : [NeZero n] → {v : Vec α n} → v.tail.list = v.list.tail
 | nz, #() => False.elim (nz.out rfl)
-| nz, x::xs => by simp
+| _, _::xs => rfl
 
 @[simp]
 theorem Vec.list_set {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (v.set i a).list = v.list.set i a
@@ -46,8 +46,8 @@ theorem Vec.list_set {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (
   @Fin.cases
     n
     (fun i ↦ ((x::xs).set i a).list = (x::xs).list.set i a) -- Motive
-    (by simp [Vec.set])                                     -- 0 case
-    (fun i' ↦ by simp [Vec.set, list_set])                  -- succ case
+    (by simp [set])                                         -- 0 case
+    (fun i' ↦ by simp [set, list_set])                      -- succ case
     i
 
 @[simp]
@@ -65,13 +65,13 @@ theorem Vec.cons_append {α n m} {x : α} {xs : Vec α m} {v : Vec α n} : (x ::
 
 @[simp]
 theorem Vec.append_nil {α n} : (v : Vec α n) → (v ++ (#() : Vec α 0)) = (cast (by simp) v)
-| #() => by simp
+| #() => rfl
 | x::xs => by simp [append_nil xs] ; grind
 
 -- Changed v2 to be implicit
 @[simp]
 theorem Vec.list_append {α n m} : {v1 : Vec α n} → {v2 : Vec α m} → (v1 ++ v2).list = v1.list ++ v2.list
-| #(), v => by simp
+| #(), v => rfl
 | v, #() => by simp ; grind
 | x::xs, v => by simp [list_append]
 
@@ -79,31 +79,39 @@ theorem Vec.list_append {α n m} : {v1 : Vec α n} → {v2 : Vec α m} → (v1 +
 theorem Vec.list_flatten {α n m} : {v : Vec (Vec α n) m} → v.flatten.list = (list <$> v.list).flatten
 | #() => rfl
 | x::xs => by
-  simp [Vec.flatten, Vec.list, Functor.map]
+  simp [flatten, list, Functor.map]
   conv => lhs ; apply list_append
   congr
   exact list_flatten
 
 @[simp]
 theorem Vec.list_map {α β n} {f : α -> β} : {v : Vec α n} → (v.map f).list = v.list.map f
-| #() => by simp
+| #() => rfl
 | x::xs => by simp [map, list_map]
 
 @[simp]
-theorem Vec.list_replicate {α n} {x : Nat} {v : Vec α n} : (replicate n x).list = List.replicate n x := sorry
+theorem Vec.list_replicate {x : Nat} : {n : Nat} → (replicate n x).list = List.replicate n x
+| 0 => rfl
+| n + 1 => by simp [replicate, List.replicate, list_replicate]
 
 @[simp]
-theorem Vec.list_reverse {α n} {v : Vec α n} : v.reverse.list = v.list.reverse := sorry
+theorem Vec.list_reverse {α n} : {v : Vec α n} → v.reverse.list = v.list.reverse
+| #() => rfl
+| x::xs => by simp [reverse, list_reverse]
 
 @[simp]
-theorem Vec.list_take {α n h} {v : Vec α n} : (v.take n h).list = v.list.take n := sorry
+theorem Vec.list_take {α} : {n k : Nat} → {h : k ≤ n} → {v : Vec α n} → (v.take k h).list = v.list.take k
+| 0, k, h, #() => by grind [take, list]
+| n + 1, 0, h, x::xs => rfl
+| n + 1, k + 1, h, x::xs => by simp [take, list_take]
 
 @[simp]
-theorem Vec.list_drop {α : Type u} {m}
-  : {n : Nat} -> {v : Vec α m} -> {h : n ≤ m} -> (v.drop n h).list = v.list.drop n
-| _, #(), h => by cases h; simp [Vec.drop]
-| 0, x::xs, h => by simp [Vec.drop]
-| n + 1, x::xs, h => sorry
+theorem Vec.list_drop {α : Type u} : {m n : Nat} -> {v : Vec α m} -> {h : n ≤ m} -> (v.drop n h).list = v.list.drop n
+| _, _, #(), h => by cases h; simp [drop]
+| _, 0, v, _ => by cases v <;> simp [drop, List.drop]
+| m + 1, n + 1, x::xs, h => by
+  simp [list, drop, ← @list_drop _ _ n xs (by grind)]
+  sorry
 
 @[simp]
 theorem Vec.list_zipWith {α β γ n} {f : α -> β -> γ} {v1 : Vec α n} {v2 : Vec β n}
@@ -209,16 +217,29 @@ theorem Vec.head_zipIdx {α n k} [NeZero n] {v : Vec α n} : (v.zipIdx k).head =
 /-! ## get -/
 
 @[simp]
-theorem Vec.get_cons_zero {α n x} {xs : Vec α n} : (x::xs)[(0 : Fin (n + 1))] = x := sorry
+theorem Vec.get_cons_zero {α n x} {xs : Vec α n} : (x::xs)[(0 : Fin (n + 1))] = x := by simp [getElem, get]
 
 @[simp]
-theorem Vec.get_cons_succ {α n x} {xs : Vec α n} {i : Fin n} : (x::xs)[Fin.succ i] = xs[i] := sorry
+theorem Vec.get_cons_succ {α n x} {xs : Vec α n} {i : Fin n} : (x::xs)[Fin.succ i] = xs[i] := by simp [getElem, get]
 
 @[grind =]
-theorem Vec.get_set_neq {α n i j x} {v : Vec α n} (h : i ≠ j) : (v.set i x)[j] = v[j] := sorry
+theorem Vec.get_set_neq {α} : {n : Nat} → {i j : Fin n} → (h : i ≠ j) → {a : α} → {v : Vec α n} → (v.set i a)[j] = v[j]
+| 0, _, _, _, _, #() => by grind
+| n + 1, i, j, h, a, x::xs => by
+  cases i using Fin.cases
+  case zero => simp [set, getElem, get] ; cases j using Fin.cases <;> grind
+  case succ i' =>
+    cases j using Fin.cases
+    case zero => simp [set, getElem, get]
+    case succ j' =>
+      simp [set, @get_set_neq _ n i' j' (by grind) a xs]
 
 @[simp]
-theorem Vec.get_set_eq {α n i x} {v : Vec α n} : (v.set i x)[i] = x := sorry
+theorem Vec.get_set_eq {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (v.set i a)[i] = a
+| n + 1, i, x::xs => by
+  cases i using Fin.cases
+  case zero => simp [set, getElem, get]
+  case succ i' => simp [set, get_set_eq]
 
 @[grind =]
 theorem Vec.get_concat {α n x} {v : Vec α n} {i : Fin (n + 1)} (h : i ≠ 0) : (v.concat x)[i] = v[Fin.pred i h] := sorry
