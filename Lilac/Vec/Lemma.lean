@@ -517,7 +517,12 @@ theorem Vec.map_drop {α β} {f : α -> β}
 /-! ## beq -/
 
 instance {α n} [BEq α] [ReflBEq α] : ReflBEq (Vec α n) where
-  rfl := sorry
+  rfl := by
+    intro a
+    simp [BEq.beq]
+    induction a
+    case nil => rfl
+    case cons x xs ih => simp [Vec.beq, ih]
 
 instance {α n} [BEq α] [LawfulBEq α] : LawfulBEq (Vec α n) where
   eq_of_beq := sorry
