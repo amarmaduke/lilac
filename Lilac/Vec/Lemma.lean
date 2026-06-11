@@ -248,8 +248,7 @@ theorem Vec.get_set_neq {α} : {n : Nat} → {i j : Fin n} → (h : i ≠ j) →
   case succ i' =>
     cases j using Fin.cases
     case zero => simp [set, getElem, get]
-    case succ j' =>
-      simp [set, @get_set_neq _ n i' j' (by grind) a xs]
+    case succ j' => simp [set, @get_set_neq _ n i' j' (by grind) a xs]
 
 @[simp]
 theorem Vec.get_set_eq {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (v.set i a)[i] = a
@@ -267,16 +266,14 @@ theorem Vec.get_concat {α a}
   cases i using Fin.cases
   case zero => simp [Fin.castLT]
   case succ i' =>
-    simp [@get_concat _ a n i' (by grind) xs]
     rw [succ_castLT]
-    simp
+    simp [@get_concat _ a n i' (by grind) xs]
     grind
 
 @[grind =]
 theorem Vec.get_concat' {α a n} : {i : Fin n} → {v : Vec α n} → (v.concat a)[i.castSucc] = v[i]
 | i, #() => by grind
 | i , x::xs => by
-  simp
   cases i using Fin.cases
   case zero => rfl
   case succ i' => simp [get_concat']
