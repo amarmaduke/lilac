@@ -13,6 +13,9 @@ theorem succ_castLT {n} {i : Fin (n + 1)} {_ : i ≠ n}
 theorem succ_castLT' {m n : Nat} {i : Fin (n + m)} {h : i < m}
   : (Fin.succ i).castLT ((by grind) : i.succ < m + 1) = Fin.succ (i.castLT ((by omega) : i < m)) := by grind
 
+-- (x :: x' :: xs)[i'.castSucc.succ.rev] = (x' :: xs)[i'.succ.rev]
+theorem castSucc_succ_rev {n : Nat} {i : Fin n} : i.castSucc.succ.rev = i.succ.rev.succ := by grind
+
 /-!
   # Vec Lemmas
   TODO: Header
@@ -324,18 +327,9 @@ theorem Vec.cons_get_1 {α} {x x' : α} {n : Nat} {xs : Vec α n} : (x :: x' :: 
 theorem Vec.cons_get_rev {α} {x : α} : {n : Nat} → {xs : Vec α n} → {i : Fin n} → (x::xs)[i.castSucc.rev] = xs[i.rev]
 | _, #(), i => by grind
 | n + 1, x'::xs, i => by
-  sorry
-  -- induction i using Fin.reverseInduction
-  -- case last =>
-  --   simp [Fin.last, Fin.rev]
-  --   have _ := @cons_get_1 α x x' n xs
-  --   omega
-  -- case cast i' _ =>
-  --   cases n
-  --   case zero => grind
-  --   case succ n' =>
-  --     simp
-  --     sorry
+  cases i using Fin.cases
+  case zero => simp [← @cons_get_last]
+  case succ i' => simp [castSucc_succ_rev]
 
 @[simp]
 theorem Vec.get_reverse {α} : {n : Nat} → {v : Vec α n} → {i : Fin n} → v.reverse[i] = v[i.rev]
@@ -420,7 +414,6 @@ theorem Vec.append_assoc {α n1 n2 n3}
 | x::xs, y::ys, z::zs => by
   simp
   -- Congruence for HEq?
-
   sorry
 
 /-! ## flatten -/
