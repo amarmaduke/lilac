@@ -451,34 +451,68 @@ theorem Vec.map_id_lambda {α n} : {v : Vec α n} → v.map (λ x => x) = v
 | x::xs => by simp [map_id_lambda]
 
 @[simp, grind =]
-theorem Vec.map_tail {α β n} {f : α -> β} [NeZero n] {v : Vec α n} : v.tail.map f = (v.map f).tail := sorry
+theorem Vec.map_tail {α β} {f : α -> β} : {n : Nat} → [NeZero n] → {v : Vec α n} → v.tail.map f = (v.map f).tail
+| n + 1, nz, x::xs => by simp [map]
 
 @[simp, grind =]
-theorem Vec.map_set {α β n i x} {f : α -> β} {v : Vec α n} : (v.set i x).map f = (v.map f).set i (f x) := sorry
+theorem Vec.map_set {α β x} {f : α -> β} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (v.set i x).map f = (v.map f).set i (f x)
+| n + 1, i, x::xs => by
+  cases i using Fin.cases
+  case zero => simp [map, set]
+  case succ i' => simp [map, set, map_set]
 
 @[simp, grind =]
-theorem Vec.map_concat {α β n x} {f : α -> β} {v : Vec α n} : (v.concat x).map f = (v.map f).concat (f x) := sorry
+theorem Vec.map_concat {α β n x} {f : α -> β} : {v : Vec α n} → (v.concat x).map f = (v.map f).concat (f x)
+| #() => by simp
+| x::xs => by simp [map, concat, map_concat]
 
 @[simp, grind =]
-theorem Vec.map_append {α β n m} {f : α -> β} {v1 : Vec α n} {v2 : Vec α m} : (v1 ++ v2).map f = v1.map f ++ v2.map f := sorry
+theorem Vec.map_append {α β n m} {f : α -> β} : {v1 : Vec α n} → {v2 : Vec α m} → (v1 ++ v2).map f = v1.map f ++ v2.map f
+| #(), _ => rfl
+| _, #() => by grind [map]
+| x::xs, y::ys => by simp [map_append]
 
 @[simp, grind =]
-theorem Vec.map_flatten {α β n m} {f : α -> β} {v : Vec (Vec α n) m} : v.flatten.map f = (v.map (map f)).flatten := sorry
+theorem Vec.map_flatten {α β n m} {f : α -> β} : {v : Vec (Vec α n) m} → v.flatten.map f = (v.map (map f)).flatten
+| #() => rfl
+| x::xs => by
+  have ih := @map_append _ _ _ _ f x (xs.flatten)
+  simp only [HAppend.hAppend] at ih
+  simp [map, flatten, ← map_flatten, ih]
 
 @[simp, grind =]
-theorem Vec.map_map {α β γ n} {f : α -> β} {h : β -> γ} {v : Vec α n} : (v.map f).map h = v.map (h ∘ f) := sorry
+theorem Vec.map_map {α β γ n} {f : α -> β} {h : β -> γ} : {v : Vec α n} → (v.map f).map h = v.map (h ∘ f)
+| #() => rfl
+| x::xs => by simp [map, map_map]
 
 @[simp, grind =]
-theorem Vec.map_replicate {α β n} {a : α} {f : α -> β} : (replicate n a).map f = replicate n (f a) := sorry
+theorem Vec.map_replicate {α β} {a : α} {f : α -> β} : {n : Nat} →  (replicate n a).map f = replicate n (f a)
+| 0 => rfl
+| n + 1 => by simp [map_replicate]
 
 @[simp, grind =]
-theorem Vec.map_reverse {α β n} {f : α -> β} {v : Vec α n} : v.reverse.map f = (v.map f).reverse := sorry
+theorem Vec.map_reverse {α β n} {f : α -> β} : {v : Vec α n} → v.reverse.map f = (v.map f).reverse
+| #() => rfl
+| x::xs => by simp [map_concat, map_reverse]
 
 @[simp, grind =]
-theorem Vec.map_take {α β m n} {f : α -> β} {h} {v : Vec α m} : (v.take n h).map f = (v.map f).take n h := sorry
+theorem Vec.map_take {α β} {f : α -> β}
+  : {m : Nat} → {n : Fin m} → {h : n ≤ m} → {v : Vec α m} → (v.take n h).map f = (v.map f).take n h
+| m + 1, n, h, x::xs => by
+  cases n using Fin.cases
+  case zero => rfl
+  case succ n' => simp [map, take, map_take]
 
 @[simp, grind =]
-theorem Vec.map_drop {α β m n} {f : α -> β} {h} {v : Vec α m} : (v.drop n h).map f = (v.map f).drop n h := sorry
+theorem Vec.map_drop {α β} {f : α -> β}
+  : {m : Nat} → {n : Fin m} → {h : n ≤ m} → {v : Vec α m} → (v.drop n h).map f = (v.map f).drop n h
+| m + 1, n, h, x::xs => by
+  cases n using Fin.cases
+  case zero => rfl
+  case succ n' =>
+    simp [map, drop]
+    have ih := @map_drop _ _ f m n' (by grind) xs
+    sorry
 
 /-! ## beq -/
 
