@@ -117,13 +117,19 @@ theorem Vec.list_take {α} : {n k : Nat} → {h : k ≤ n} → {v : Vec α n} �
 | n + 1, 0, h, x::xs => rfl
 | n + 1, k + 1, h, x::xs => by simp [take, list_take]
 
+-- Is this true? Is this provable?
+@[simp]
+theorem Vec.list_cast {α : Type u} : {m n : Nat} → {h : Vec α m = Vec α n} → {v : Vec α m} → (cast h v).list = v.list
+| 0, n, h, #() => by
+  simp [cast]
+  sorry
+| m + 1, n, h, x::xs => sorry
+
 @[simp]
 theorem Vec.list_drop {α : Type u} : {m n : Nat} -> {v : Vec α m} -> {h : n ≤ m} -> (v.drop n h).list = v.list.drop n
 | _, _, #(), h => by cases h; simp [drop]
 | _, 0, v, _ => by cases v <;> simp [drop, List.drop]
-| m + 1, n + 1, x::xs, h => by
-  simp [list, drop, ← @list_drop _ _ n xs (by grind)]
-  sorry
+| m + 1, n + 1, x::xs, h => by simp [list, drop, ← @list_drop _ _ n xs (by grind)]
 
 @[simp]
 theorem Vec.list_zipWith {α β γ n} {f : α -> β -> γ}
@@ -407,7 +413,7 @@ theorem Vec.append_assoc {α n1 n2 n3}
 | #(), _, _ => by simp
 | _, #(), _ => by simp ; grind
 | _, _, #() => by simp ; grind
-| x::xs, y::ys, z::zs => by
+| x::xs, ys, zs => by
   simp
   -- Congruence for HEq?
   sorry
