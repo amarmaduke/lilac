@@ -13,7 +13,6 @@ theorem succ_castLT {n} {i : Fin (n + 1)} {_ : i ≠ n}
 theorem succ_castLT' {m n : Nat} {i : Fin (n + m)} {h : i < m}
   : (Fin.succ i).castLT ((by grind) : i.succ < m + 1) = Fin.succ (i.castLT ((by omega) : i < m)) := by grind
 
--- (x :: x' :: xs)[i'.castSucc.succ.rev] = (x' :: xs)[i'.succ.rev]
 theorem castSucc_succ_rev {n : Nat} {i : Fin n} : i.castSucc.succ.rev = i.succ.rev.succ := by grind
 
 /-!
