@@ -239,7 +239,7 @@ theorem Vec.get_cons_succ {α n x} {xs : Vec α n} {i : Fin n} : (x::xs)[Fin.suc
 
 @[grind =]
 theorem Vec.get_set_neq {α} : {n : Nat} → {i j : Fin n} → (h : i ≠ j) → {a : α} → {v : Vec α n} → (v.set i a)[j] = v[j]
-| 0, _, _, _, _, #() => by grind
+| 0, _, _, _, _, #() => by omega
 | n + 1, i, j, h, a, x::xs => by
   cases i using Fin.cases
   case zero => simp [set, getElem, get] ; cases j using Fin.cases <;> grind
@@ -276,7 +276,7 @@ theorem Vec.get_concat' {α a n} : {i : Fin n} → {v : Vec α n} → (v.concat 
 | i , x::xs => by
   simp
   cases i using Fin.cases
-  case zero => simp
+  case zero => rfl
   case succ i' => simp [get_concat']
 
 @[grind =]
@@ -315,13 +315,27 @@ theorem Vec.concat_get_last {α} {n : Nat} {a : α} : {xs : Vec α n} → (xs.co
 | x::xs => by simp [concat, ← cons_get_last, concat_get_last]
 
 @[simp]
+theorem Vec.cons_get_0 {α} {x : α} {n : Nat} {xs : Vec α n} : (x :: xs)[Fin.ofNat (n + 1) 0] = x := rfl
+
+@[simp]
+theorem Vec.cons_get_1 {α} {x x' : α} {n : Nat} {xs : Vec α n} : (x :: x' :: xs)[Fin.ofNat (n + 2) 1] = x' := rfl
+
+@[simp]
 theorem Vec.cons_get_rev {α} {x : α} : {n : Nat} → {xs : Vec α n} → {i : Fin n} → (x::xs)[i.castSucc.rev] = xs[i.rev]
 | _, #(), i => by grind
 | n + 1, x'::xs, i => by
-  have blah : i.castSucc.rev = i.rev.castSucc + 1 := by
-    simp [Fin.rev]
-    sorry
-  simp [blah]
+  sorry
+  -- induction i using Fin.reverseInduction
+  -- case last =>
+  --   simp [Fin.last, Fin.rev]
+  --   have _ := @cons_get_1 α x x' n xs
+  --   omega
+  -- case cast i' _ =>
+  --   cases n
+  --   case zero => grind
+  --   case succ n' =>
+  --     simp
+  --     sorry
 
 @[simp]
 theorem Vec.get_reverse {α} : {n : Nat} → {v : Vec α n} → {i : Fin n} → v.reverse[i] = v[i.rev]
@@ -329,19 +343,44 @@ theorem Vec.get_reverse {α} : {n : Nat} → {v : Vec α n} → {i : Fin n} → 
 | n + 1 + 1, x::xs, i => by
   induction i using Fin.reverseInduction
   case last => simp [reverse]
-  case cast i' ih => simp [get_concat', get_reverse]
+  case cast i' => simp [get_concat', get_reverse]
 
 @[simp]
-theorem Vec.get_zipWith {α β γ n} {f : α -> β -> γ} {v1 : Vec α n} {v2 : Vec β n} {i : Fin n} : (zipWith f v1 v2)[i] = f v1[i] v2[i] := sorry
+theorem Vec.get_zipWith {α β γ n} {f : α -> β -> γ}
+  : {v1 : Vec α n} → {v2 : Vec β n} → {i : Fin n} → (zipWith f v1 v2)[i] = f v1[i] v2[i]
+| x::xs, y::ys, i => by
+  cases i using Fin.cases
+  case zero => rfl
+  case succ i' => simp [zipWith, get_zipWith]
 
 @[simp]
-theorem Vec.get_zip {α β n} {v1 : Vec α n} {v2 : Vec β n} {i : Fin n} : (zip v1 v2)[i] = (v1[i], v2[i]) := sorry
+theorem Vec.get_zip {α β n} : {v1 : Vec α n} → {v2 : Vec β n} → {i : Fin n} → (zip v1 v2)[i] = (v1[i], v2[i])
+| x::xs, y::ys, i => by
+  cases i using Fin.cases
+  case zero => rfl
+  case succ i' => simp [zip]
 
 @[simp]
-theorem Vec.get_range {n k} {i : Fin n} : (range n k)[i] = i + k := sorry
+theorem Vec.get_range : {k n : Nat} → {i : Fin n} → (range n k)[i] = i + k
+| 0, n + 1, i => by
+  cases i using Fin.cases
+  case zero => rfl
+  case succ i' => simp [range, get_range]
+| k + 1, n + 1, i => by
+  cases i using Fin.cases
+  case zero => simp
+  case succ i' => simp [range, get_range] ; omega
 
 @[simp]
-theorem Vec.get_zipIdx {α n k} {v : Vec α n} {i : Fin n} : (v.zipIdx k)[i] = (v[i], i + k) := sorry
+theorem Vec.get_zipIdx {α} : {k n : Nat} → {v : Vec α n} → {i : Fin n} → (v.zipIdx k)[i] = (v[i], i + k)
+| 0, n + 1, x::xs, i => by
+  cases i using Fin.cases
+  case zero => rfl
+  case succ i' => simp [zipIdx, get_zipIdx]
+| k + 1, n + 1, x::xs, i => by
+  cases i using Fin.cases
+  case zero => simp
+  case succ i' => simp [get_zipIdx] ; omega
 
 /-! ## set -/
 
@@ -368,12 +407,21 @@ theorem Vec.append_nil_left {α n} {v : Vec α n} : (#() : Vec α 0) ++ v = v :=
 theorem Vec.append_cons {α n1 n2 x} {v1 : Vec α n1} {v2 : Vec α n2} : (x::v1) ++ v2 = x::(v1 ++ v2) := rfl
 
 @[simp, grind =]
-theorem Vec.append_nil_right {α n} {v : Vec α n} : v ++ (#() : Vec α 0) ≍ v := sorry
+theorem Vec.append_nil_right {α n} : {v : Vec α n} → v ++ (#() : Vec α 0) ≍ v
+| #() => by simp
+| x::xs => by simp ; grind
 
 @[simp, grind =]
-theorem Vec.append_assoc {α n1 n2 n3} {v1 : Vec α n1} {v2 : Vec α n2} {v3 : Vec α n3}
-  : (v1 ++ v2) ++ v3 ≍ v1 ++ (v2 ++ v3)
-:= sorry
+theorem Vec.append_assoc {α n1 n2 n3}
+  : {v1 : Vec α n1} → {v2 : Vec α n2} → {v3 : Vec α n3} → (v1 ++ v2) ++ v3 ≍ v1 ++ (v2 ++ v3)
+| #(), _, _ => by simp
+| _, #(), _ => by simp ; grind
+| _, _, #() => by simp ; grind
+| x::xs, y::ys, z::zs => by
+  simp
+  -- Congruence for HEq?
+
+  sorry
 
 /-! ## flatten -/
 
@@ -401,10 +449,14 @@ instance : IndexedFunctor Nat Vec where
 -/
 
 @[simp, grind =]
-theorem Vec.map_id {v : Vec α n} : v.map id = v := sorry
+theorem Vec.map_id {α n} : {v : Vec α n} → v.map id = v
+| #() => rfl
+| x::xs => by simp [map_id]
 
 @[simp, grind =]
-theorem Vec.map_id_lambda {v : Vec α n} : v.map (λ x => x) = v := sorry
+theorem Vec.map_id_lambda {α n} : {v : Vec α n} → v.map (λ x => x) = v
+| #() => rfl
+| x::xs => by simp [map_id_lambda]
 
 @[simp, grind =]
 theorem Vec.map_tail {α β n} {f : α -> β} [NeZero n] {v : Vec α n} : v.tail.map f = (v.map f).tail := sorry
