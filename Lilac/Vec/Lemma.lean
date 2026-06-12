@@ -293,26 +293,26 @@ theorem Vec.get_replicate {α} {x : α} : {n : Nat} → {i : Fin n} → (replica
   case succ i' => simp [get_replicate]
 
 @[simp]
-theorem Vec.cons_get_last {α n x} : {xs : Vec α (n + 1)} → xs[Fin.last n] = (x::xs)[Fin.last (n + 1)]
+theorem Vec.get_cons_last {α n x} : {xs : Vec α (n + 1)} → xs[Fin.last n] = (x::xs)[Fin.last (n + 1)]
 | x'::xs => by simp [Fin.last, getElem, get]
 
 @[simp]
-theorem Vec.concat_get_last {α} {n : Nat} {a : α} : {xs : Vec α n} → (xs.concat a)[Fin.last n] = a
+theorem Vec.get_concat_last {α} {n : Nat} {a : α} : {xs : Vec α n} → (xs.concat a)[Fin.last n] = a
 | #() => rfl
-| x::xs => by simp [concat, ← cons_get_last, concat_get_last]
+| x::xs => by simp [concat, ← get_cons_last, get_concat_last]
 
 @[simp]
-theorem Vec.cons_get_0 {α} {x : α} {n : Nat} {xs : Vec α n} : (x :: xs)[Fin.ofNat (n + 1) 0] = x := rfl
+theorem Vec.get_cons_0 {α} {x : α} {n : Nat} {xs : Vec α n} : (x :: xs)[Fin.ofNat (n + 1) 0] = x := rfl
 
 @[simp]
-theorem Vec.cons_get_1 {α} {x x' : α} {n : Nat} {xs : Vec α n} : (x :: x' :: xs)[Fin.ofNat (n + 2) 1] = x' := rfl
+theorem Vec.get_cons_1 {α} {x x' : α} {n : Nat} {xs : Vec α n} : (x :: x' :: xs)[Fin.ofNat (n + 2) 1] = x' := rfl
 
 @[simp]
 theorem Vec.get_rev_cons {α} {x : α} : {n : Nat} → {xs : Vec α n} → {i : Fin n} → (x::xs)[i.castSucc.rev] = xs[i.rev]
 | _, #(), i => by grind
 | n + 1, x'::xs, i => by
   cases i using Fin.reverseInduction
-  case last => simp [Fin.rev] ; exact cons_get_1
+  case last => simp [Fin.rev] ; exact get_cons_1
   case cast i' _ =>
     simp [Fin.castSucc, Fin.castAdd]
     norm_cast -- Hmm, still seems hard.
