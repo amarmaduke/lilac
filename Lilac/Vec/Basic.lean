@@ -129,7 +129,7 @@ instance {α : Type u} {n m : Nat} : HAppend (Vec α n) (Vec α m) (Vec α (m + 
 @[simp]
 def Vec.flatten {α n m} : Vec (Vec α n) m -> Vec α (n * m)
 | #() => #()
-| x::xs => x.append xs.flatten |> cast (by grind)
+| x::xs => x ++ xs.flatten |> cast (by grind)
 
 @[simp]
 def Vec.map {α : Type u} {β : Type b} {n} (f : α -> β) : Vec α n -> Vec β n

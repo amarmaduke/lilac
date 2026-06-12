@@ -2,19 +2,6 @@ import Lilac.Vec.Basic
 
 namespace Lilac
 
-/-! ## Misc. -/
-
--- theorem zero_lt_imp_neZero {n} : [NeZero n] → 0 < n
--- | h => by simp [Nat.ne_zero_iff_zero_lt.mp, h.out]
-
--- theorem succ_castLT {n} {i : Fin (n + 1)} {_ : i ≠ n}
---   : i.succ.castLT ((by grind) : i.succ < n + 1) = (i.castLT ((by omega) : i < n)).succ := by grind
-
--- theorem succ_castLT' {m n : Nat} {i : Fin (n + m)} {h : i < m}
---   : (Fin.succ i).castLT ((by grind) : i.succ < m + 1) = Fin.succ (i.castLT ((by omega) : i < m)) := by grind
-
--- theorem castSucc_succ_rev {n : Nat} {i : Fin n} : i.castSucc.succ.rev = i.succ.rev.succ := by grind
-
 /-!
   # Vec Lemmas
   TODO: Header
@@ -44,6 +31,27 @@ theorem Vec.to_iso {α n} : {v : Vec α n} -> v.to.to = v
 | #() => rfl
 | x::xs => by simp [to_iso]
 
+/-! ## append -/
+
+@[simp]
+theorem Vec.append_nil_left {α n} {v : Vec α n} : (#() : Vec α 0) ++ v = v := rfl
+
+@[simp]
+theorem Vec.append_cons {α n1 n2 x} {v1 : Vec α n1} {v2 : Vec α n2} : (x::v1) ++ v2 = x::(v1 ++ v2) := rfl
+
+@[simp, grind =]
+theorem Vec.append_nil_right {α n} : {v : Vec α n} → v ++ (#() : Vec α 0) ≍ v
+| #() => by simp
+| x::xs => by simp ; grind [@append_nil_right _ _ xs]
+
+@[simp, grind =]
+theorem Vec.append_assoc {α n1 n2 n3}
+  : {v1 : Vec α n1} → {v2 : Vec α n2} → {v3 : Vec α n3} → (v1 ++ v2) ++ v3 ≍ v1 ++ (v2 ++ v3)
+| #(), _, _ => by simp
+| _, #(), _ => by simp ; grind
+| _, _, #() => by grind
+| x::xs, ys, zs => by simp ; grind [@append_assoc _ _ _ _ xs ys zs]
+
 /-! ## list -/
 
 @[simp]
@@ -54,31 +62,12 @@ theorem Vec.list_tail {n α} : [NeZero n] → {v : Vec α n} → v.tail.list = v
 @[simp]
 theorem Vec.list_set {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (v.set i a).list = v.list.set i a
 | 0, i, #() => by grind
-| n + 1, i, (x::xs) =>
-  @Fin.cases
-    n
-    (fun i ↦ ((x::xs).set i a).list = (x::xs).list.set i a) -- Motive
-    (by simp [set])                                         -- 0 case
-    (fun i' ↦ by simp [set, list_set])                      -- succ case
-    i
+| n + 1, i, (x::xs) => Fin.cases (by simp [set]) (fun i' ↦ by simp [set, list_set]) i
 
 @[simp]
 theorem Vec.list_concat {α n x} : {v : Vec α n} → (v.concat x).list = v.list.concat x
 | #() => rfl
 | x::xs => by simp [list_concat]
-
--- Avoids needing to unfold HAppend.hAppend. Maybe there's a better way.
-@[simp]
-theorem Vec.nil_append {α n} : {v : Vec α n} → (#() : Vec α 0) ++ v = v := rfl
-
--- Avoids needing to unfold HAppend.hAppend. Maybe there's a better way.
-@[simp]
-theorem Vec.cons_append {α n m} {x : α} {xs : Vec α m} {v : Vec α n} : (x :: xs) ++ v = x :: (xs ++ v) := rfl
-
-@[simp]
-theorem Vec.append_nil {α n} : (v : Vec α n) → (v ++ (#() : Vec α 0)) = (cast (by simp) v)
-| #() => rfl
-| x::xs => by simp [append_nil xs] ; grind
 
 -- Changed v2 to be implicit
 @[simp]
@@ -93,8 +82,8 @@ theorem Vec.list_flatten {α n m} : {v : Vec (Vec α n) m} → v.flatten.list = 
 | x::xs => by
   simp [flatten, list, Functor.map]
   conv => lhs ; apply list_append
+  have ih := list_flatten (v := xs)
   congr
-  exact list_flatten
 
 @[simp]
 theorem Vec.list_map {α β n} {f : α -> β} : {v : Vec α n} → (v.map f).list = v.list.map f
@@ -260,7 +249,6 @@ theorem Vec.get_set_eq {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} →
   case zero => simp [set, getElem, get]
   case succ i' => simp [set, get_set_eq]
 
-
 @[grind =]
 theorem Vec.get_concat {α a}
   : {n : Nat} → {i : Fin (n + 1)} → (h : i ≠ n) → {v : Vec α n} → (v.concat a)[i] = v[i.castLT ((by grind) : i < n)]
@@ -323,9 +311,12 @@ theorem Vec.cons_get_1 {α} {x x' : α} {n : Nat} {xs : Vec α n} : (x :: x' :: 
 theorem Vec.get_rev_cons {α} {x : α} : {n : Nat} → {xs : Vec α n} → {i : Fin n} → (x::xs)[i.castSucc.rev] = xs[i.rev]
 | _, #(), i => by grind
 | n + 1, x'::xs, i => by
-  cases i using Fin.cases
-  case zero => simp [← @cons_get_last]
-  case succ i' => sorry -- norm_cast
+  cases i using Fin.reverseInduction
+  case last => simp [Fin.rev] ; exact cons_get_1
+  case cast i' _ =>
+    simp [Fin.castSucc, Fin.castAdd]
+    norm_cast -- Hmm, still seems hard.
+    sorry
 
 @[simp]
 theorem Vec.get_reverse {α} : {n : Nat} → {v : Vec α n} → {i : Fin n} → v.reverse[i] = v[i.rev]
@@ -388,30 +379,6 @@ theorem Vec.get_zipIdx {α} : {k n : Nat} → {v : Vec α n} → {i : Fin n} →
 
 -- TODO
 
-/-! ## append -/
-
-@[simp]
-theorem Vec.append_nil_left {α n} {v : Vec α n} : (#() : Vec α 0) ++ v = v := rfl
-
-@[simp]
-theorem Vec.append_cons {α n1 n2 x} {v1 : Vec α n1} {v2 : Vec α n2} : (x::v1) ++ v2 = x::(v1 ++ v2) := rfl
-
-@[simp, grind =]
-theorem Vec.append_nil_right {α n} : {v : Vec α n} → v ++ (#() : Vec α 0) ≍ v
-| #() => by simp
-| x::xs => by simp ; grind
-
-@[simp, grind =]
-theorem Vec.append_assoc {α n1 n2 n3}
-  : {v1 : Vec α n1} → {v2 : Vec α n2} → {v3 : Vec α n3} → (v1 ++ v2) ++ v3 ≍ v1 ++ (v2 ++ v3)
-| #(), _, _ => by simp
-| _, #(), _ => by simp ; grind
-| _, _, #() => by simp ; grind
-| x::xs, ys, zs => by
-  simp
-  have ih := @append_assoc _ _ _ _ xs ys zs
-  grind
-
 /-! ## flatten -/
 
 -- TODO
@@ -448,8 +415,9 @@ theorem Vec.map_id_lambda {α n} : {v : Vec α n} → v.map (λ x => x) = v
 | x::xs => by simp [map_id_lambda]
 
 @[simp, grind =]
-theorem Vec.map_tail {α β} {f : α -> β} : {n : Nat} → [NeZero n] → {v : Vec α n} → v.tail.map f = (v.map f).tail
-| n + 1, nz, x::xs => by simp [map]
+theorem Vec.map_tail {α β n} {f : α -> β} : [NeZero n] → {v : Vec α n} → v.tail.map f = (v.map f).tail
+| _, #() => by simp ; norm_cast
+| _, x::xs => rfl
 
 @[simp, grind =]
 theorem Vec.map_set {α β x} {f : α -> β} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (v.set i x).map f = (v.map f).set i (f x)
@@ -474,8 +442,7 @@ theorem Vec.map_flatten {α β n m} {f : α -> β} : {v : Vec (Vec α n) m} → 
 | #() => rfl
 | x::xs => by
   have ih := @map_append _ _ _ _ f x (xs.flatten)
-  simp only [HAppend.hAppend] at ih
-  simp [map, flatten, ← map_flatten, ih]
+  simp_all [HAppend.hAppend, map, flatten, ← map_flatten]
 
 @[simp, grind =]
 theorem Vec.map_map {α β γ n} {f : α -> β} {h : β -> γ} : {v : Vec α n} → (v.map f).map h = v.map (h ∘ f)
@@ -509,29 +476,37 @@ theorem Vec.map_drop {α β} {f : α -> β}
   case succ n' =>
     simp [map, drop]
     have ih := @map_drop _ _ f m n' (by grind) xs
+    have lem : m - ↑n' = m + 1 - (↑n' + 1) := by omega
     sorry
 
 /-! ## beq -/
 
-instance {α n} [BEq α] [ReflBEq α] : ReflBEq (Vec α n) where
-  rfl := by
-    intro a
-    simp [BEq.beq]
-    induction a
-    case nil => rfl
-    case cons x xs ih => simp [Vec.beq, ih]
+theorem Vec.beq_refl {α n} [BEq α] [ReflBEq α] : ∀ {a : Vec α n}, (a == a) = true
+| #() => rfl
+| x::xs => by simp [BEq.beq] ; exact @beq_refl _ _ _ _ xs
 
-theorem Vec.beq_lawful [BEq α] [LawfulBEq α] : ∀ {a b : Vec α n}, (beq a b) = true → a = b := sorry
+instance {α n} [BEq α] [ReflBEq α] : ReflBEq (Vec α n) where
+  rfl := Vec.beq_refl
+
+theorem Vec.beq_lawful {α n} [BEq α] [LawfulBEq α] : {v1 v2 : Vec α n} → (beq v1 v2) = true → v1 = v2
+| #(), #(), h => rfl
+| x::xs, y::ys, h => by simp at h ; simp [h, @beq_lawful _ _ _ _ xs ys h.2]
 
 instance {α n} [BEq α] [LawfulBEq α] : LawfulBEq (Vec α n) where
   eq_of_beq := Vec.beq_lawful
 
 @[grind =]
-theorem Vec.beq_head_tail {α n} [BEq α] [NeZero n] {v1 : Vec α n} {v2 : Vec α n} : v1.head == v2.head ∧ v1.tail == v2.tail <-> v1 == v2 := sorry
+theorem Vec.beq_head_tail {α} [BEq α] : {n : Nat} → [NeZero n] → {v1 v2 : Vec α n} → v1.head == v2.head ∧ v1.tail == v2.tail ↔ v1 == v2
+| n + 1, _, x::xs, y::ys => by simp_all [BEq.beq]
 
 -- TODO: there is some funext automation thing that should be used here
 @[grind <-]
-theorem Vec.beq_get {α n} [BEq α] {v1 : Vec α n} {v2 : Vec α n} (h : ∀ (i : Fin n), v1[i] == v2[i]) : v1 == v2 := sorry
+theorem Vec.beq_get {α} [BEq α] : {n : Nat} → {v1 v2 : Vec α n} → (h : ∀ (i : Fin n), v1[i] == v2[i]) → v1 == v2
+| 0, #(), #(), _ => rfl
+| n + 1, x::xs, y::ys, h => by
+  have h' : x == y ∧ ∀ (i : Fin n), xs[i] == ys[i] := ⟨ h 0 , fun i ↦ h i.succ ⟩
+  simp [BEq.beq]
+  exact ⟨ h'.1, @beq_get α _ n xs ys h'.2 ⟩
 
 /-! ## replicate -/
 
