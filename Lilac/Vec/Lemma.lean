@@ -246,21 +246,21 @@ theorem Vec.get_set_eq {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} →
   case succ i' => simp [set, get_set_eq]
 
 @[grind =]
-theorem Vec.get_concat {α a}
+theorem Vec.get_concat_castLT {α a}
   : {n : Nat} → {i : Fin (n + 1)} → (h : i ≠ n) → {v : Vec α n} → (v.concat a)[i] = v[i.castLT ((by grind) : i < n)]
 | 0, _, _, #() => by grind
 | n + 1, i, h, x::xs => by
   cases i using Fin.cases
   case zero => simp [Fin.castLT]
-  case succ i' => simp [@get_concat _ a n i' (by grind) xs] ; norm_cast
+  case succ i' => simp [get_concat_castLT (i := i') (h := by grind) (v := xs)] ; norm_cast
 
 @[grind =]
-theorem Vec.get_concat' {α a n} : {i : Fin n} → {v : Vec α n} → (v.concat a)[i.castSucc] = v[i]
+theorem Vec.get_concat_castSucc {α a n} : {i : Fin n} → {v : Vec α n} → (v.concat a)[i.castSucc] = v[i]
 | i, #() => by grind
 | i , x::xs => by
   cases i using Fin.cases
   case zero => rfl
-  case succ i' => simp [get_concat']
+  case succ i' => simp [get_concat_castSucc]
 
 @[grind =]
 theorem Vec.get_append_lt {α}
@@ -303,17 +303,11 @@ theorem Vec.get_concat_last {α} {n : Nat} {a : α} : {xs : Vec α n} → (xs.co
 | x::xs => by simp [concat, get_concat_last]
 
 @[simp]
-theorem Vec.get_cons_0 {α} {x : α} {n : Nat} {xs : Vec α n} : (x::xs)[Fin.ofNat (n + 1) 0] = x := rfl
-
-@[simp]
-theorem Vec.get_cons_1 {α} {x x' : α} {n : Nat} {xs : Vec α n} : (x::x'::xs)[Fin.ofNat (n + 2) 1] = x' := rfl
-
-@[simp]
 theorem Vec.get_rev_cons {α} {x : α} : {n : Nat} → {xs : Vec α n} → {i : Fin n} → (x::xs)[i.castSucc.rev] = xs[i.rev]
 | _, #(), i => by grind
 | n + 1, x'::xs, i => by
   cases i using Fin.reverseInduction
-  case last => simp [Fin.rev] ; exact get_cons_1
+  case last => simp [Fin.rev] ; rfl
   case cast i' _ => simp [Fin.rev_castSucc]
 
 @[simp]
@@ -322,7 +316,7 @@ theorem Vec.get_reverse {α} : {n : Nat} → {v : Vec α n} → {i : Fin n} → 
 | n + 1 + 1, x::xs, i => by
   induction i using Fin.reverseInduction
   case last => simp [reverse]
-  case cast i' => simp [get_concat', get_reverse]
+  case cast i' => simp [get_concat_castSucc, get_reverse]
 
 @[simp]
 theorem Vec.get_zipWith {α β γ n} {f : α -> β -> γ}
@@ -475,6 +469,7 @@ theorem Vec.map_drop {α β} {f : α -> β}
     simp [map, drop]
     have ih := @map_drop _ _ f m n' (by grind) xs
     have lem : m - ↑n' = m + 1 - (↑n' + 1) := by omega
+
     sorry
 
 /-! ## beq -/
