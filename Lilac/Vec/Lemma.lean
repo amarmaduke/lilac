@@ -273,10 +273,15 @@ theorem Vec.get_append_lt {α}
 | n + 1, m, x::xs, ys, i, h => by
   cases i using Fin.cases
   case zero => simp [get, getElem, Fin.castLT]
-  case succ i' => simp [@get_append_lt _ _ _ _ _ i' (by grind)] ; norm_cast
+  case succ i' => simp [get_append_lt (i := i') (by grind)] ; norm_cast
 
-theorem Vec.get_append_ge {α n m} {v1 : Vec α n} {v2 : Vec α m} {i : Fin (m + n)} (h : i ≥ n)
-  : (v1 ++ v2)[i] = v2[Fin.subNat n (i.cast (by grind) : Fin (m + n)) h] := sorry
+theorem Vec.get_append_ge {α}
+  : {n m : Nat} → {v1 : Vec α n} → {v2 : Vec α m} → {i : Fin (m + n)} → (h : i ≥ n) → (v1 ++ v2)[i] = v2[Fin.subNat n (i.cast (by grind) : Fin (m + n)) h]
+| 0, _, #(), _, i, h => by simp
+| n + 1, m, x::xs, ys, i, h => by
+  cases i using Fin.cases
+  case zero => grind [get, getElem, Fin.subNat]
+  case succ i' => simp [get_append_ge (i := i') (by grind), Fin.subNat]
 
 @[simp]
 theorem Vec.get_map {α β} {f : α -> β} : {n : Nat} → {v : Vec α n} → {i : Fin n} → (v.map f)[i] = f v[i]
