@@ -447,7 +447,7 @@ theorem Vec.map_flatten {α β n m} {f : α -> β} : {v : Vec (Vec α n) m} → 
 | #() => rfl
 | x::xs => by
   have ih := @map_append _ _ _ _ f x (xs.flatten)
-  simp_all [HAppend.hAppend, map, flatten, ← map_flatten]
+  simp [map, flatten, ← map_flatten]
 
 @[simp, grind =]
 theorem Vec.map_map {α β γ n} {f : α -> β} {h : β -> γ} : {v : Vec α n} → (v.map f).map h = v.map (h ∘ f)

@@ -118,7 +118,6 @@ def Vec.concat {α n} : Vec α n -> α -> Vec α (n + 1)
 /--
 We intentionally flip the addition order to avoid `cast`ing and obtain better simplification
 -/
-@[simp]
 def Vec.append {α n m} : Vec α n -> Vec α m -> Vec α (m + n)
 | #(), ys => ys
 | x::xs, ys => x::(xs.append ys)
