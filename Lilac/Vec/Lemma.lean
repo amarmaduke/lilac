@@ -56,8 +56,8 @@ theorem Vec.append_assoc {α n1 n2 n3}
 
 @[simp]
 theorem Vec.list_tail {n α} : [NeZero n] → {v : Vec α n} → v.tail.list = v.list.tail
-| nz, #() => False.elim (nz.out rfl)
-| _, _::xs => rfl
+| _, #() => by simp ; norm_cast
+| _, _::_ => rfl
 
 @[simp]
 theorem Vec.list_set {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (v.set i a).list = v.list.set i a
