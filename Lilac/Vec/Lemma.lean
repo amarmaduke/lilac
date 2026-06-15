@@ -79,11 +79,7 @@ theorem Vec.list_append {α n m} : {v1 : Vec α n} → {v2 : Vec α m} → (v1 +
 @[simp]
 theorem Vec.list_flatten {α n m} : {v : Vec (Vec α n) m} → v.flatten.list = (list <$> v.list).flatten
 | #() => rfl
-| x::xs => by
-  simp [flatten, list, Functor.map]
-  conv => lhs ; apply list_append
-  have ih := list_flatten (v := xs)
-  congr
+| x::xs => by simp [flatten, list, Functor.map, list_flatten]
 
 @[simp]
 theorem Vec.list_map {α β n} {f : α -> β} : {v : Vec α n} → (v.map f).list = v.list.map f
