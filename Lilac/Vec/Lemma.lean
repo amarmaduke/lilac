@@ -109,9 +109,8 @@ theorem Vec.list_cast {α : Type u} : {m n : Nat} → {h : m = n} → {v : Vec �
 
 @[simp]
 theorem Vec.list_drop {α : Type u} : {m n : Nat} -> {v : Vec α m} -> {h : n ≤ m} -> (v.drop n h).list = v.list.drop n
-| _, _, #(), h => by cases h; simp [drop]
 | _, 0, v, _ => by cases v <;> simp [drop, List.drop]
-| m + 1, n + 1, x::xs, h => by simp [list, drop, ← @list_drop _ _ n xs (by grind)]
+| m + 1, n + 1, x::xs, h => by simp [list, drop, ← @list_drop _ _ n xs (by omega)]
 
 @[simp]
 theorem Vec.list_zipWith {α β γ n} {f : α -> β -> γ}
@@ -188,29 +187,27 @@ theorem Vec.get_cons_succ {α n x} {xs : Vec α n} {i : Fin n} : (x::xs)[Fin.suc
 @[grind =]
 theorem Vec.get_set_neq {α} : {n : Nat} → {i j : Fin n} → (h : i ≠ j) → {a : α} → {v : Vec α n} → (v.set i a)[j] = v[j]
 | 0, _, _, _, _, #() => by omega
-| n + 1, i, j, h, a, x::xs => by
-  cases i using Fin.cases
-  case zero => simp [set, getElem, get] ; cases j using Fin.cases <;> grind
-  case succ i' =>
-    cases j using Fin.cases
-    case zero => simp [set, getElem, get]
-    case succ j' => simp [set, @get_set_neq _ n i' j' (by grind) a xs]
+| n + 1, ⟨i + 1, _⟩, ⟨0, _⟩, h, a, x::xs => rfl
+| n + 1, ⟨0, _⟩, ⟨j + 1, _⟩, h, a, x::xs => rfl
+| n + 1, ⟨i + 1, _⟩, ⟨j + 1, _⟩, h, a, x::xs => by
+  have ih := @get_set_neq _ n ⟨i, by omega⟩ ⟨j, by omega⟩ (by grind) a xs
+  simp_all [set, getElem, get]
 
 @[simp]
 theorem Vec.get_set_eq {α a} : {n : Nat} → {i : Fin n} → {v : Vec α n} → (v.set i a)[i] = a
-| n + 1, i, x::xs => by
-  cases i using Fin.cases
-  case zero => simp [set, getElem, get]
-  case succ i' => simp [set, get_set_eq]
+| n + 1, ⟨0, _⟩, x::xs => by simp [set, getElem, get]
+| n + 1, ⟨i + 1, _⟩, x::xs => by
+  have ih := @get_set_eq _ a n ⟨i, by omega⟩ xs
+  simp_all [set, getElem, get]
 
 @[grind =]
 theorem Vec.get_concat_castLT {α a}
-  : {n : Nat} → {i : Fin (n + 1)} → (h : i ≠ n) → {v : Vec α n} → (v.concat a)[i] = v[i.castLT ((by grind) : i < n)]
+  : {n : Nat} → {i : Fin (n + 1)} → (h : i ≠ n) → {v : Vec α n} → (v.concat a)[i] = v[i.castLT ((by omega) : i < n)]
 | 0, _, _, #() => by grind
-| n + 1, i, h, x::xs => by
-  cases i using Fin.cases
-  case zero => simp [Fin.castLT]
-  case succ i' => simp [get_concat_castLT (i := i') (h := by grind) (v := xs)] ; norm_cast
+| n + 1, ⟨0, _⟩, h, x::xs => rfl
+| n + 1, ⟨i + 1, _⟩, h, x::xs => by
+  have ih := @get_concat_castLT _ a n ⟨i, by omega⟩ (by grind) xs
+  norm_cast
 
 @[grind =]
 theorem Vec.get_concat_castSucc {α a n} : {i : Fin n} → {v : Vec α n} → (v.concat a)[i.castSucc] = v[i]
@@ -224,18 +221,18 @@ theorem Vec.get_concat_castSucc {α a n} : {i : Fin n} → {v : Vec α n} → (v
 theorem Vec.get_append_lt {α}
   : {n m : Nat} → {v1 : Vec α n} → {v2 : Vec α m} → {i : Fin (m + n)} → (h : i < n) → (v1 ++ v2)[i] = v1[i.castLT h]
 | 0, _, #(), _, i, h => by grind
-| n + 1, m, x::xs, ys, i, h => by
-  cases i using Fin.cases
-  case zero => simp [get, getElem, Fin.castLT]
-  case succ i' => simp [get_append_lt (i := i') (by grind)] ; norm_cast
+| n + 1, m, x::xs, ys, ⟨0, _⟩, h => by simp [get, getElem, Fin.castLT]
+| n + 1, m, x::xs, ys, ⟨i + 1, _⟩, h => by
+  have ih := @get_append_lt _ n m xs ys ⟨i, by omega⟩ (by grind)
+  simp_all [getElem, get]
 
 theorem Vec.get_append_ge {α}
-  : {n m : Nat} → {v1 : Vec α n} → {v2 : Vec α m} → {i : Fin (m + n)} → (h : i ≥ n) → (v1 ++ v2)[i] = v2[Fin.subNat n (i.cast (by grind) : Fin (m + n)) h]
+  : {n m : Nat} → {v1 : Vec α n} → {v2 : Vec α m} → {i : Fin (m + n)} → (h : i ≥ n) → (v1 ++ v2)[i] = v2[Fin.subNat n (i.cast (by omega) : Fin (m + n)) h]
 | 0, _, #(), _, i, h => by simp
-| n + 1, m, x::xs, ys, i, h => by
-  cases i using Fin.cases
-  case zero => grind [get, getElem, Fin.subNat]
-  case succ i' => simp [get_append_ge (i := i') (by grind), Fin.subNat]
+| n + 1, m, x::xs, ys, ⟨0, _⟩, h => by grind [get, getElem, Fin.subNat]
+| n + 1, m, x::xs, ys, ⟨i + 1, _⟩, h => by
+  have ih := @get_append_ge _ n m xs ys ⟨i, by omega⟩ (by grind)
+  simp_all [Fin.subNat, getElem, get]
 
 @[simp]
 theorem Vec.get_map {α β} {f : α -> β} : {n : Nat} → {v : Vec α n} → {i : Fin n} → (v.map f)[i] = f v[i]
