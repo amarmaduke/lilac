@@ -460,17 +460,17 @@ theorem Vec.map_take {α β} {f : α -> β}
   case succ n' => simp [map, take, map_take]
 
 @[simp, grind =]
+theorem Vec.map_cast {α β} {f : α → β} : {m n : Nat} → {h : m = n} → {v : Vec α m}
+  → map f (cast (by grind : Vec α m = Vec α n) v) = cast (by grind : Vec β m = Vec β n) (map f v) := by grind
+
+@[simp, grind =]
 theorem Vec.map_drop {α β} {f : α -> β}
   : {m : Nat} → {n : Fin m} → {h : n ≤ m} → {v : Vec α m} → (v.drop n h).map f = (v.map f).drop n h
 | m + 1, n, h, x::xs => by
   cases n using Fin.cases
   case zero => rfl
-  case succ n' =>
-    simp [map, drop]
-    have ih := @map_drop _ _ f m n' (by grind) xs
-    have lem : m - ↑n' = m + 1 - (↑n' + 1) := by omega
+  case succ n' => simp [map, drop, map_drop]
 
-    sorry
 
 /-! ## beq -/
 
