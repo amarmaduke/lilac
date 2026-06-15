@@ -177,48 +177,6 @@ theorem Vec.length_range {n k} : (range n k).length = n := rfl
 
 theorem Vec.length_zipIdx {α n k} {v : Vec α n} : (v.zipIdx k).length = n := rfl
 
-/-! ## head -/
-
-@[grind =]
-theorem Vec.head_zeroth_index_agree {α n} [NeZero n] {v : Vec α n} : v.head = v[Fin.ofNat n 0] := sorry
-
-@[simp]
-theorem Vec.head_set_zero {α n x} [NeZero n] {v : Vec α n} : (v.set 0 x).head = x := sorry
-
-@[simp]
-theorem Vec.head_set_succ {α n i x} [NeZero n] {v : Vec α n} : (v.set (i + 1) x).head = v.head := sorry
-
-@[simp]
-theorem Vec.head_concat {α n x} [NeZero n] {v : Vec α n} : (v.concat x).head = v.head := sorry
-
-@[simp]
-theorem Vec.head_append {n α m} [NeZero n] {v1 : Vec α n} (v2 : Vec α m) : (v1 ++ v2).head = v1.head := sorry
-
-@[simp]
-theorem Vec.head_flatten {α n m} [NeZero n] [NeZero m] {v : Vec (Vec α n) m} : v.flatten.head = v.head.head := sorry
-
-@[simp]
-theorem Vec.head_map {α β n} {f : α -> β} [NeZero n] {v : Vec α n} : (v.map f).head = f v.head := sorry
-
-@[simp]
-theorem Vec.head_replicate {α n} {x : α} [NeZero n] {v : Vec α n} : (replicate n x).head = x := sorry
-
-@[simp]
-theorem Vec.head_zipWith {α β γ n} {f : α -> β -> γ} [NeZero n] {v1 : Vec α n} {v2 : Vec β n} : (zipWith f v1 v2).head = f v1.head v2.head := sorry
-
-@[simp]
-theorem Vec.head_zip {α β n} [NeZero n] {v1 : Vec α n} {v2 : Vec β n} : (zip v1 v2).head = (v1.head, v2.head) := sorry
-
-@[simp]
-theorem Vec.head_range {n k} [NeZero n] : (range n k).head = k := sorry
-
-@[simp]
-theorem Vec.head_zipIdx {α n k} [NeZero n] {v : Vec α n} : (v.zipIdx k).head = (v.head, k) := sorry
-
-/-! ## tail -/
-
--- TODO
-
 /-! ## get -/
 
 @[simp]
@@ -355,6 +313,60 @@ theorem Vec.get_zipIdx {α} : {k n : Nat} → {v : Vec α n} → {i : Fin n} →
   case zero => simp
   case succ i' => simp [get_zipIdx] ; omega
 
+/-! ## head -/
+
+@[grind =]
+theorem Vec.head_zeroth_index_agree {α} : {n : Nat} → [NeZero n] → {v : Vec α n} → v.head = v[Fin.ofNat n 0]
+| _ + 1, _, _::_ => rfl
+
+@[simp]
+theorem Vec.head_set_zero {α x} : {n : Nat} → [NeZero n] → {v : Vec α n} → (v.set 0 x).head = x
+| _ + 1, _, _::_ => rfl
+
+@[simp]
+theorem Vec.head_set_succ {α a} : {n : Nat} → {i : Fin n} → [NeZero n] → [NeZero i] → {v : Vec α n} → (v.set i a).head = v.head
+| _ + 1, ⟨_ + 1, _⟩, _, _, _::_ => rfl
+
+@[simp]
+theorem Vec.head_concat {α a} : {n : Nat} → [NeZero n] → {v : Vec α n} → (v.concat a).head = v.head
+| _ + 1, _, _::_ => rfl
+
+@[simp]
+theorem Vec.head_append {α} : {n m : Nat} → [NeZero n] → {v1 : Vec α n} → (v2 : Vec α m) → (v1 ++ v2).head = v1.head
+| _ + 1, _, _, _::_, _ => rfl
+
+@[simp]
+theorem Vec.head_flatten {α} : {n m : Nat} → [NeZero n] → [NeZero m] → {v : Vec (Vec α n) m} → v.flatten.head = v.head.head
+| _ + 1, _ + 1, _, _, (_::_)::_ => rfl
+
+@[simp]
+theorem Vec.head_map {α β} {f : α -> β} : {n : Nat} → [NeZero n] → {v : Vec α n} → (v.map f).head = f v.head
+| _ + 1, _, _::_ => rfl
+
+@[simp]
+theorem Vec.head_replicate {α} {x : α} : {n : Nat} → [NeZero n] → (replicate n x).head = x
+| _ + 1, _ => rfl
+
+@[simp]
+theorem Vec.head_zipWith {α β γ} {f : α -> β -> γ} : {n : Nat} → [NeZero n] → {v1 : Vec α n} → {v2 : Vec β n} → (zipWith f v1 v2).head = f v1.head v2.head
+| _ + 1, _, _::_, _::_ => rfl
+
+@[simp]
+theorem Vec.head_zip {α β} : {n : Nat} → [NeZero n] → {v1 : Vec α n} → {v2 : Vec β n} → (zip v1 v2).head = (v1.head, v2.head)
+| _ + 1, _, _::_, _::_ => rfl
+
+@[simp]
+theorem Vec.head_range : {n k : Nat} → [NeZero n] → (range n k).head = k
+| _ + 1, _, _ => rfl
+
+@[simp]
+theorem Vec.head_zipIdx {α} : {n k : Nat} → [NeZero n] → {v : Vec α n} → (v.zipIdx k).head = (v.head, k)
+| _ + 1, _, _, _::_ => rfl
+
+/-! ## tail -/
+
+-- TODO
+
 /-! ## set -/
 
 -- TODO
@@ -470,7 +482,6 @@ theorem Vec.map_drop {α β} {f : α -> β}
   cases n using Fin.cases
   case zero => rfl
   case succ n' => simp [map, drop, map_drop]
-
 
 /-! ## beq -/
 
