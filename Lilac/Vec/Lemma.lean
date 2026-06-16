@@ -414,9 +414,7 @@ theorem Vec.map_id {α n} : {v : Vec α n} → v.map id = v
 | x::xs => by simp [map_id]
 
 @[simp, grind =]
-theorem Vec.map_id_lambda {α n} : {v : Vec α n} → v.map (λ x => x) = v
-| #() => rfl
-| x::xs => by simp [map_id_lambda]
+theorem Vec.map_id_lambda {α n} : {v : Vec α n} → v.map (λ x => x) = v := map_id
 
 @[simp, grind =]
 theorem Vec.map_tail {α β n} {f : α -> β} : [NeZero n] → {v : Vec α n} → v.tail.map f = (v.map f).tail
@@ -536,15 +534,23 @@ theorem Vec.beq_get {α} [BEq α] : {n : Nat} → {v1 v2 : Vec α n} → (h : �
 
 theorem Vec.any_append_left {α p} : {n m : Nat} → [NeZero n] → {v1 : Vec α n} → {v2 : Vec α m} → v1.any p → (v1 ++ v2).any p
 | 1, m, _, x::#(), ys, h => by simp_all [any]
-| n + 1 + 1, m, _, x::xs, ys, h => by
+| n + 2, m, _, x::xs, ys, h => by
   simp_all [any]
   cases h
   case inl h' => exact Or.inl h'
   case inr h' => exact Or.inr $ any_append_left (v1 := xs) (v2 := ys) (p := p) h'
 
-theorem Vec.any_append_right {α p} : {n m : Nat} → [NeZero m] → {v1 : Vec α n} → {v2 : Vec α m} → v2.any p → (v1 ++ v2).any p := sorry
+theorem Vec.any_append_right {α p} : {n m : Nat} → [NeZero m] → {v1 : Vec α n} → {v2 : Vec α m} → v2.any p → (v1 ++ v2).any p
+| 0, 1, _, #(), y::#(), h => by simp_all
+| n + 1, 1, _, x::xs, y::#(), h => by simp_all [any, any_append_right]
+| 0, m + 2, _, #(), y::ys, h => by simp_all
+| n + 1, m + 2, _, x::xs, y::ys, h => by simp_all [any, any_append_right]
 
-theorem Vec.any_append_both {α p} : {n m : Nat} → {v1 : Vec α n} → {v2 : Vec α m} → v1.any p → v2.any p → (v1 ++ v2).any p := sorry
+theorem Vec.any_append_both {α p} : {n m : Nat} → {v1 : Vec α n} → {v2 : Vec α m} → v1.any p → v2.any p → (v1 ++ v2).any p
+| 0, 0, #(), #(), h => by simp_all
+| n + 1, 0, x::xs, #(), h => by simp_all [any]
+| 0, m + 1, #(), y::ys, h => by simp_all
+| n + 1, m + 1, x::xs, y::ys, h => by simp_all [any, any_append_right]
 
 theorem Vec.any_list {α p} {n : Nat} : {v : Vec α n} → v.any p ↔ v.list.any p
 | #() => by simp [any]
