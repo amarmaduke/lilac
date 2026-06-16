@@ -69,7 +69,6 @@ theorem Vec.list_concat {α n x} : {v : Vec α n} → (v.concat x).list = v.list
 | #() => rfl
 | x::xs => by simp [list_concat]
 
--- Changed v2 to be implicit
 @[simp]
 theorem Vec.list_append {α n m} : {v1 : Vec α n} → {v2 : Vec α m} → (v1 ++ v2).list = v1.list ++ v2.list
 | #(), v => rfl
@@ -362,6 +361,10 @@ theorem Vec.head_zipIdx {α} : {n k : Nat} → [NeZero n] → {v : Vec α n} →
 
 /-! ## tail -/
 
+@[simp]
+theorem Vec.tail_append {α} : {n m : Nat} → [NeZero n] → {v1 : Vec α n} → {v2 : Vec α m} → (v1 ++ v2).tail ≍ v1.tail ++ v2
+| n + 1, m, _, x::xs, ys => by simp only [HAppend.hAppend, append] ; rw [tail, tail] ; simp
+
 -- TODO
 
 /-! ## set -/
@@ -530,6 +533,22 @@ theorem Vec.beq_get {α} [BEq α] : {n : Nat} → {v1 v2 : Vec α n} → (h : �
 -- TODO
 
 /-! ## any -/
+
+theorem Vec.any_append_left {α p} : {n m : Nat} → [NeZero n] → {v1 : Vec α n} → {v2 : Vec α m} → v1.any p → (v1 ++ v2).any p
+| 1, m, _, x::#(), ys, h => by simp_all [any]
+| n + 1 + 1, m, _, x::xs, ys, h => by
+  simp_all [any]
+  cases h
+  case inl h' => exact Or.inl h'
+  case inr h' => exact Or.inr $ any_append_left (v1 := xs) (v2 := ys) (p := p) h'
+
+theorem Vec.any_append_right {α p} : {n m : Nat} → [NeZero m] → {v1 : Vec α n} → {v2 : Vec α m} → v2.any p → (v1 ++ v2).any p := sorry
+
+theorem Vec.any_append_both {α p} : {n m : Nat} → {v1 : Vec α n} → {v2 : Vec α m} → v1.any p → v2.any p → (v1 ++ v2).any p := sorry
+
+theorem Vec.any_list {α p} {n : Nat} : {v : Vec α n} → v.any p ↔ v.list.any p
+| #() => by simp [any]
+| x::xs => by simp [any, any_list]
 
 -- TODO
 
