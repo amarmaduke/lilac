@@ -441,9 +441,7 @@ theorem Vec.map_append {α β n m} {f : α -> β} : {v1 : Vec α n} → {v2 : Ve
 @[simp, grind =]
 theorem Vec.map_flatten {α β n m} {f : α -> β} : {v : Vec (Vec α n) m} → v.flatten.map f = (v.map (map f)).flatten
 | #() => rfl
-| x::xs => by
-  have ih := @map_append _ _ _ _ f x (xs.flatten)
-  simp [map, flatten, ← map_flatten]
+| x::xs => by simp [map, flatten, ← map_flatten]
 
 @[simp, grind =]
 theorem Vec.map_map {α β γ n} {f : α -> β} {h : β -> γ} : {v : Vec α n} → (v.map f).map h = v.map (h ∘ f)
@@ -568,6 +566,11 @@ theorem Vec.any_get {α p} : {n : Nat} → {v : Vec α n} → {h : v.any p} → 
   case inr h' =>
     have ⟨ i, ih ⟩ := any_get (v := xs) (h := h')
     exact ⟨ i.succ, ih ⟩
+
+theorem Vec.any_tail {α p} : {n : Nat} → [NeZero n] → {v : Vec α n} → {h : v.any p} → {not_head : ¬ p v.head} → v.tail.any p
+| n + 1, _, x::xs, h, not_head => by simp_all [any]
+
+theorem Vec.any_set {α x p} : {n : Nat} → {v : Vec α n} → {i : Fin n} → {h : p x} → (v.set i x).any p := sorry
 
 -- TODO
 
