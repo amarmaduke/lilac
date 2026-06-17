@@ -557,6 +557,7 @@ theorem Vec.any_list {α p} {n : Nat} : {v : Vec α n} → v.any p ↔ v.list.an
 | #() => by simp [any]
 | x::xs => by simp [any, any_list]
 
+set_option linter.unusedVariables false in
 theorem Vec.any_get {α p} : {n : Nat} → {v : Vec α n} → {h : v.any p} → ∃ i : Fin n, p (v[i])
 | 0, #(), _ => False.elim (by simp_all [any])
 | n + 1, x::xs, h => by
@@ -567,10 +568,19 @@ theorem Vec.any_get {α p} : {n : Nat} → {v : Vec α n} → {h : v.any p} → 
     have ⟨ i, ih ⟩ := any_get (v := xs) (h := h')
     exact ⟨ i.succ, ih ⟩
 
+set_option linter.unusedVariables false in
 theorem Vec.any_tail {α p} : {n : Nat} → [NeZero n] → {v : Vec α n} → {h : v.any p} → {not_head : ¬ p v.head} → v.tail.any p
 | n + 1, _, x::xs, h, not_head => by simp_all [any]
 
-theorem Vec.any_set {α x p} : {n : Nat} → {v : Vec α n} → {i : Fin n} → {h : p x} → (v.set i x).any p := sorry
+set_option linter.unusedVariables false in
+theorem Vec.any_set {α p} : {a : α} → {n : Nat} → {v : Vec α n} → {i : Fin n} → {h : p a} → (v.set i a).any p
+| a, n + 1, x::xs, i, h => by
+  simp [set]
+  cases i using Fin.cases
+  case zero => grind [any]
+  case succ i' =>
+    simp [any]
+    exact Or.inr $ any_set (v := xs) (i := i') (a := a) (h := h)
 
 -- TODO
 
