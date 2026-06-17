@@ -575,12 +575,9 @@ theorem Vec.any_tail {α p} : {n : Nat} → [NeZero n] → {v : Vec α n} → {h
 set_option linter.unusedVariables false in
 theorem Vec.any_set {α p} : {a : α} → {n : Nat} → {v : Vec α n} → {i : Fin n} → {h : p a} → (v.set i a).any p
 | a, n + 1, x::xs, i, h => by
-  simp [set]
   cases i using Fin.cases
-  case zero => grind [any]
-  case succ i' =>
-    simp [any]
-    exact Or.inr $ any_set (v := xs) (i := i') (a := a) (h := h)
+  case zero => grind [set, any]
+  case succ i' => simp [set, any] ; exact Or.inr $ any_set (v := xs) (i := i') (a := a) (h := h)
 
 -- TODO
 
