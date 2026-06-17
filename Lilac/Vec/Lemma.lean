@@ -560,15 +560,14 @@ theorem Vec.any_list {α p} {n : Nat} : {v : Vec α n} → v.any p ↔ v.list.an
 | x::xs => by simp [any, any_list]
 
 theorem Vec.any_get {α p} : {n : Nat} → {v : Vec α n} → {h : v.any p} → ∃ i : Fin n, p (v[i])
-| 0, #(), h => False.elim (by simp_all [any])
+| 0, #(), _ => False.elim (by simp_all [any])
 | n + 1, x::xs, h => by
   simp [any] at h
   cases h
-  case inl h' =>
-    exact ⟨ 0, h' ⟩
+  case inl h' => exact ⟨ 0, h' ⟩
   case inr h' =>
-    have ih := any_get (v := xs) (h := h')
-    exact ⟨ sorry, sorry ⟩
+    have ⟨ i, ih ⟩ := any_get (v := xs) (h := h')
+    exact ⟨ i.succ, ih ⟩
 
 -- TODO
 
