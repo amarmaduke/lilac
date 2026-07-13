@@ -1,5 +1,8 @@
+module
 
-import Lilac.Vec.Encoding
+public import Lilac.Vec.Encoding
+
+@[expose] public section
 
 namespace Lilac
 
@@ -48,8 +51,8 @@ meta def Vec.unexpand_nil : Lean.PrettyPrinter.Unexpander
 meta def Vec.unexpand_cons : Lean.PrettyPrinter.Unexpander
 | `($(_) $x $tail) =>
   match tail with
-  | `([])      => `(#($x))
-  | `([$xs,*]) => `(#($x, $xs,*))
+  | `(#())      => `(#($x))
+  | `(#($xs,*)) => `(#($x, $xs,*))
   | `(⋯)       => `(#($x, $tail))
   | _          => throw ()
 | _ => throw ()
@@ -74,8 +77,8 @@ def Vec.list {α n} : Vec α n -> List α
 | #() => []
 | x::xs => x::xs.list
 
-@[reducible, simp]
-def Vec.length {α n} (_ : Vec α n) : Nat := n
+@[simp]
+abbrev Vec.length {α n} (_ : Vec α n) : Nat := n
 
 @[simp]
 def Vec.head {α} : ∀ {n : Nat} [NeZero n], Vec α n -> α
@@ -254,3 +257,5 @@ instance {α n} : Membership α (Vec α n) where
   mem v x := Vec.Mem x v
 
 end Lilac
+
+end section

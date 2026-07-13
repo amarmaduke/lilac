@@ -1,4 +1,8 @@
-import Lilac.Vec.Basic
+module
+
+public import Lilac.Vec.Basic
+
+@[expose] public section
 
 namespace Lilac
 
@@ -710,3 +714,5 @@ instance {α n} [DecidableEq α] : DecidableEq (Vec α n) := Vec.has_dec_eq
 
 
 end Lilac
+
+end section

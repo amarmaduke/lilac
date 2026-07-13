@@ -1,5 +1,8 @@
+module
 
-import Lilac.Map
+public import Lilac.Map
+
+@[expose] public section
 
 namespace Lilac.Fun
 
@@ -60,8 +63,10 @@ def Vec.induction
   rw [zdef]; exact cons
 }
 
+@[simp]
 theorem Vec.induction_nil : induction ni co nil = ni := by rfl
 
+@[simp]
 theorem Vec.induction_cons :
   induction ni co (cons hd tl) = co hd (induction ni co tl)
 := by
@@ -81,3 +86,5 @@ theorem Vec.map_compose {v : Vec A n} :
 := by rfl
 
 end Lilac.Fun
+
+end section
