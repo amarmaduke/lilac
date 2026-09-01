@@ -183,7 +183,7 @@ def Vec.any {α n} : Vec α n -> (p : α -> Bool) -> Bool
 
 def Vec.all {α n} : Vec α n -> (p : α -> Bool) -> Bool
 | #(), _ => true
-| x::xs, p => p x && xs.any p
+| x::xs, p => p x && xs.all p
 
 @[simp]
 def Vec.zipWith {α : Type u} {β : Type v} {γ : Type w} {n} (f : α -> β -> γ)

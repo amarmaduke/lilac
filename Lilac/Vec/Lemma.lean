@@ -605,6 +605,11 @@ theorem Vec.any_set {α p} : {a : α} → {n : Nat} → {v : Vec α n} → {i : 
 -- TODO
 
 /-! ## all -/
+@[simp]
+theorem Vec.all_nil {α : Type u_1} {p : α → Bool} : #().all p = true := rfl
+
+@[simp]
+theorem Vec.all_cons {α : Type u_1} {p : α → Bool} {a : α} {v : Vec α n} : (a :: v).all p = (p a && v.all p) := rfl
 
 -- TODO
 
